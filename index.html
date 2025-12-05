@@ -3,59 +3,82 @@
 <head>
     <title>Countdown Timer</title>
     <style>
-        #clock {
+        /* CSS样式部分 - 控制页面外观 */
+        h1 {
+            text-align: center;
+        }
+        .countdown-container {
+            margin: 30px 0;
+        }
+        .clock {
             font-size: 48px;
             text-align: center;
+            margin: 20px 0;
+            font-family: monospace;
         }
     </style>
 </head>
 <body>
-    <h1>距离演唱会开始还有：</h1>
-    <div id="clock"></div>
-    <style>
-        #clock {
-            font-size: 48px;
-            text-align: center;
-        }
-        h1 {
-            text-align: center;
-        }
-    </style>
+    <!-- 第一个倒计时 -->
+    <div class="countdown-container">
+        <h1>距离演唱会开始还有：</h1>
+        <div id="clock1" class="clock"></div>
+    </div>
+    
+    <!-- 第二个倒计时 -->
+    <div class="countdown-container">
+        <h1>距离专辑发行还有：</h1>  <!-- 修改标题为你想要的 -->
+        <div id="clock2" class="clock"></div>
+    </div>
 
     <script>
-        // Set the countdown date and time
-        var countdownDate = new Date("January 10, 2026 19:30:00").getTime();
+        // JavaScript部分 - 实现动态功能
+        
+        /***************** 第一个倒计时 *****************/
+        // 设置目标时间（演唱会时间）
+        var countdownDate1 = new Date("January 10, 2026 19:30:00").getTime();
+        
+        // 第二个倒计时的目标时间（修改为你想要的日期和时间）
+        var countdownDate2 = new Date("March 15, 2026 00:00:00").getTime(); // 示例时间
 
-        // Update the countdown every second
-        var countdownTimer = setInterval(function() {
-            // Get the current date and time
+        // 更新倒计时函数
+        function updateCountdown(clockId, countdownDate) {
+            // 获取当前时间
             var now = new Date().getTime();
-
-            // Calculate the remaining time
+            
+            // 计算剩余时间（毫秒）
             var distance = countdownDate - now;
-
-            // Calculate days, hours, minutes, and seconds
+            
+            // 如果倒计时结束
+            if (distance < 0) {
+                document.getElementById(clockId).innerHTML = "已开始！";
+                return; // 停止执行
+            }
+            
+            // 计算天、小时、分钟、秒
             var days = Math.floor(distance / (1000 * 60 * 60 * 24));
             var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
             var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
             var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+            
+            // 显示倒计时
+            document.getElementById(clockId).innerHTML = 
+                days + "天 " + hours + "小时 " + minutes + "分 " + seconds + "秒";
+        }
 
-            // Display the countdown
-            document.getElementById("clock").innerHTML = days + "d " + hours + "h " + minutes + "m " + seconds + "s ";
+        // 每秒更新两个倒计时
+        setInterval(function() {
+            updateCountdown("clock1", countdownDate1);  // 更新第一个倒计时
+            updateCountdown("clock2", countdownDate2);  // 更新第二个倒计时
+        }, 1000);  // 1000毫秒 = 1秒
 
-            // If the countdown is finished, display a message
-            if (distance < 0) {
-                clearInterval(countdownTimer);
-                document.getElementById("clock").innerHTML = "你说！";
-            }
-        }, 1000);
+        // 页面加载后立即更新一次
+        updateCountdown("clock1", countdownDate1);
+        updateCountdown("clock2", countdownDate2);
     </script>
 
     <div style="text-align: center;">
         <a href="./home.html">Pubmed教学区</a>
-    </div></div>
+    </div>
 </body>
 </html>
-
-
-
