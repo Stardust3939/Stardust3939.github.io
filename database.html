@@ -575,7 +575,7 @@
             
             // 获取当前日期（用于Excel导出，不在界面显示）
             const today = new Date();
-            const dateString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+            const dateString = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
             
             // 获取下一个分子号（基于现有最大分子号）
             const molecularNumber = getNextMolecularNumber();
