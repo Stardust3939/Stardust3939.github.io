@@ -37,4 +37,923 @@
             margin: 0 auto;
             background-color: white;
             border-radius: 10px;
-            box-shadow: 0 5px 20px rgba(0,
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+        
+        /* 简洁的顶部区域 */
+        .app-header {
+            background-color: #f8f9fa;
+            padding: 20px 30px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .app-title {
+            font-size: 1.8rem;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        /* 主内容区 */
+        .main-content {
+            padding: 25px;
+        }
+        
+        /* 表单操作栏 */
+        .form-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border-radius: 6px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+        }
+        
+        .btn-primary {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+        
+        .btn-success {
+            background-color: var(--success-color);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #229954;
+        }
+        
+        .btn-danger {
+            background-color: var(--accent-color);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+        
+        .btn-outline {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+        }
+        
+        .btn-outline:hover {
+            background-color: var(--light-color);
+        }
+        
+        /* 数据表格 */
+        .data-table-container {
+            overflow-x: auto;
+            margin-bottom: 25px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1100px;
+        }
+        
+        .data-table thead {
+            background-color: #f1f5f9;
+            color: var(--text-color);
+        }
+        
+        .data-table th {
+            padding: 14px 12px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.9rem;
+            border-right: 1px solid var(--border-color);
+            border-bottom: 2px solid var(--border-color);
+        }
+        
+        .data-table th:last-child {
+            border-right: none;
+        }
+        
+        .data-table tbody tr {
+            border-bottom: 1px solid var(--border-color);
+            transition: background-color 0.2s ease;
+        }
+        
+        .data-table tbody tr:hover {
+            background-color: rgba(52, 152, 219, 0.05);
+        }
+        
+        .data-table td {
+            padding: 10px 12px;
+            vertical-align: top;
+        }
+        
+        /* 输入字段样式 */
+        .input-field {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 0.9rem;
+            transition: border-color 0.3s ease;
+        }
+        
+        .input-field:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+        
+        .input-field:disabled {
+            background-color: #f8f9fa;
+            color: #6c757d;
+            cursor: not-allowed;
+        }
+        
+        .select-field {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 0.9rem;
+            background-color: white;
+            cursor: pointer;
+        }
+        
+        .select-field:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+        }
+        
+        /* 操作列样式 */
+        .action-cell {
+            text-align: center;
+            width: 80px;
+        }
+        
+        .delete-btn {
+            background-color: transparent;
+            border: none;
+            color: var(--accent-color);
+            cursor: pointer;
+            font-size: 1.1rem;
+            padding: 5px;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        .delete-btn:hover {
+            background-color: rgba(231, 76, 60, 0.1);
+        }
+        
+        /* 统计信息 */
+        .stats-container {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border-color);
+            flex-wrap: wrap;
+        }
+        
+        .stat-card {
+            background-color: var(--light-color);
+            border-radius: 6px;
+            padding: 15px;
+            flex: 1;
+            min-width: 180px;
+        }
+        
+        .stat-title {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            margin-bottom: 8px;
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+        
+        /* 页脚 */
+        footer {
+            background-color: #f8f9fa;
+            padding: 15px 25px;
+            text-align: center;
+            border-top: 1px solid var(--border-color);
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 1200px) {
+            .data-table-container {
+                border-radius: 0;
+                border-left: none;
+                border-right: none;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 15px;
+            }
+            
+            .form-actions {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .action-buttons {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .btn {
+                flex: 1;
+                justify-content: center;
+                padding: 8px 12px;
+            }
+            
+            .app-title {
+                font-size: 1.5rem;
+            }
+        }
+        
+        /* 字段标签样式 */
+        .field-label {
+            display: block;
+            font-size: 0.8rem;
+            color: #7f8c8d;
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+        
+        /* Code字段特殊样式 */
+        .code-field {
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-weight: bold;
+            color: #2c3e50;
+            background-color: #f8f9fa;
+            padding: 8px 10px;
+            border-radius: 4px;
+            min-height: 36px;
+            display: flex;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+        
+        .code-explanation {
+            font-size: 0.75rem;
+            color: #7f8c8d;
+            margin-top: 3px;
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+        
+        /* 提示信息 */
+        .alert {
+            padding: 12px 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        /* 分子号样式 */
+        .molecular-input {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        /* 验证状态 */
+        .valid-field {
+            border-color: var(--success-color) !important;
+        }
+        
+        .invalid-field {
+            border-color: var(--accent-color) !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="app-header">
+            <div class="header-content">
+                <div class="app-title">
+                    <i class="fas fa-clipboard-list"></i>
+                    <span>临床数据录入系统</span>
+                </div>
+                <div class="action-buttons">
+                    <button class="btn btn-success" id="addRowBtn">
+                        <i class="fas fa-plus"></i> 添加行
+                    </button>
+                    <button class="btn btn-primary" id="saveBtn">
+                        <i class="fas fa-file-excel"></i> 导出Excel
+                    </button>
+                    <button class="btn btn-danger" id="resetBtn">
+                        <i class="fas fa-redo"></i> 重置
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <!-- 提示信息 -->
+            <div id="successAlert" class="alert alert-success">
+                <i class="fas fa-check-circle"></i> 数据已成功保存为Excel文件！
+            </div>
+            
+            <div id="infoAlert" class="alert alert-info">
+                <i class="fas fa-info-circle"></i> 请输入患者数据，系统将自动计算Code字段。
+            </div>
+            
+            <!-- 数据表格 -->
+            <div class="data-table-container">
+                <table class="data-table" id="dataTable">
+                    <thead>
+                        <tr>
+                            <th>操作</th>
+                            <th>姓名</th>
+                            <th>性别</th>
+                            <th>年龄</th>
+                            <th>分子号</th>
+                            <th>病案号</th>
+                            <th>诊断</th>
+                            <th>诊断备注</th>
+                            <th>Code</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <!-- 数据行将通过JavaScript动态生成 -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- 统计信息 -->
+            <div class="stats-container">
+                <div class="stat-card">
+                    <div class="stat-title">总记录数</div>
+                    <div class="stat-value" id="totalRecords">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title">男性患者</div>
+                    <div class="stat-value" id="maleCount">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title">女性患者</div>
+                    <div class="stat-value" id="femaleCount">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title">其他性别</div>
+                    <div class="stat-value" id="otherGenderCount">0</div>
+                </div>
+            </div>
+            
+            <!-- Code格式说明 -->
+            <div style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 6px; border: 1px solid #e9ecef;">
+                <h4 style="margin-bottom: 10px; color: #2c3e50;"><i class="fas fa-info-circle"></i> Code格式说明</h4>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 10px; font-size: 0.85rem;">
+                    <div>
+                        <strong>前3位</strong>: 分子号数字部分转16进制 (例: K0012 → 12<sub>10</sub> → C<sub>16</sub> → 00C)
+                    </div>
+                    <div>
+                        <strong>4-6位</strong>: 性别(1位) + 年龄(2位) (例: 男28岁 → M28)
+                    </div>
+                    <div>
+                        <strong>7-9位</strong>: 年份(2位) + 月份(1位) (例: 2025年10月 → 25A)
+                    </div>
+                    <div>
+                        <strong>10-12位</strong>: 扩展位 (固定: V01)
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>© 2025 临床数据录入系统 | 新版Code格式: 3位16进制分子号+性别年龄+年月+V01</p>
+        </footer>
+    </div>
+
+    <script>
+        // 全局变量
+        let dataRows = []; // 存储所有数据行
+        
+        // DOM元素
+        const tableBody = document.getElementById('tableBody');
+        const addRowBtn = document.getElementById('addRowBtn');
+        const saveBtn = document.getElementById('saveBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const successAlert = document.getElementById('successAlert');
+        const infoAlert = document.getElementById('infoAlert');
+        const totalRecordsEl = document.getElementById('totalRecords');
+        const maleCountEl = document.getElementById('maleCount');
+        const femaleCountEl = document.getElementById('femaleCount');
+        const otherGenderCountEl = document.getElementById('otherGenderCount');
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 显示提示信息
+            infoAlert.style.display = 'block';
+            
+            // 添加初始行
+            addNewRow();
+            
+            // 更新统计信息
+            updateStatistics();
+            
+            // 设置事件监听器
+            setupEventListeners();
+        });
+        
+        // 设置事件监听器
+        function setupEventListeners() {
+            addRowBtn.addEventListener('click', addNewRow);
+            saveBtn.addEventListener('click', saveToExcel);
+            resetBtn.addEventListener('click', resetAll);
+        }
+        
+        // 获取下一个分子号
+        function getNextMolecularNumber() {
+            if (dataRows.length === 0) {
+                return 'K0001';
+            }
+            
+            // 查找所有分子号中的最大数字
+            let maxNumber = 0;
+            
+            dataRows.forEach(row => {
+                const molecularNumber = row.molecularNumber;
+                if (molecularNumber && molecularNumber.startsWith('K')) {
+                    const numberPart = molecularNumber.substring(1);
+                    const num = parseInt(numberPart, 10);
+                    if (!isNaN(num) && num > maxNumber) {
+                        maxNumber = num;
+                    }
+                }
+            });
+            
+            // 返回下一个分子号
+            return `K${String(maxNumber + 1).padStart(4, '0')}`;
+        }
+        
+        // 数字转16进制并补齐3位
+        function toHex3Digit(number) {
+            const hex = parseInt(number).toString(16).toUpperCase();
+            return hex.padStart(3, '0');
+        }
+        
+        // 获取月份代码 (1-9月:1-9, 10-12月:A-C)
+        function getMonthCode(month) {
+            if (month >= 1 && month <= 9) {
+                return month.toString();
+            } else if (month === 10) {
+                return 'A';
+            } else if (month === 11) {
+                return 'B';
+            } else if (month === 12) {
+                return 'C';
+            }
+            return '0'; // 默认值
+        }
+        
+        // 添加新行
+        function addNewRow() {
+            const rowId = Date.now() + Math.random(); // 生成唯一ID
+            const row = document.createElement('tr');
+            row.id = `row-${rowId}`;
+            
+            // 获取当前日期（用于Excel导出，不在界面显示）
+            const today = new Date();
+            const dateString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+            
+            // 获取下一个分子号（基于现有最大分子号）
+            const molecularNumber = getNextMolecularNumber();
+            
+            // 创建行HTML（只显示需要的字段）
+            row.innerHTML = `
+                <td class="action-cell">
+                    <button class="delete-btn" data-row-id="${rowId}">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+                <td>
+                    <div class="field-label">姓名</div>
+                    <input type="text" class="input-field name-input" data-row-id="${rowId}" placeholder="请输入姓名">
+                </td>
+                <td>
+                    <div class="field-label">性别</div>
+                    <select class="select-field gender-select" data-row-id="${rowId}">
+                        <option value="">请选择</option>
+                        <option value="男">男</option>
+                        <option value="女">女</option>
+                        <option value="其他">其他</option>
+                    </select>
+                </td>
+                <td>
+                    <div class="field-label">年龄</div>
+                    <input type="number" class="input-field age-input" data-row-id="${rowId}" min="0" max="150" placeholder="年龄">
+                </td>
+                <td>
+                    <div class="field-label">分子号</div>
+                    <input type="text" class="input-field molecular-input molecular-number-input" data-row-id="${rowId}" value="${molecularNumber}">
+                </td>
+                <td>
+                    <div class="field-label">病案号</div>
+                    <input type="text" class="input-field case-number-input" data-row-id="${rowId}" placeholder="病案号">
+                </td>
+                <td>
+                    <div class="field-label">诊断</div>
+                    <input type="text" class="input-field diagnosis-input" data-row-id="${rowId}" placeholder="请输入诊断">
+                </td>
+                <td>
+                    <div class="field-label">诊断备注</div>
+                    <input type="text" class="input-field diagnosis-note-input" data-row-id="${rowId}" placeholder="诊断备注（可选）">
+                </td>
+                <td>
+                    <div class="field-label">Code</div>
+                    <div class="code-field" data-row-id="${rowId}">待计算</div>
+                    <div class="code-explanation" data-row-id="${rowId}"></div>
+                </td>
+            `;
+            
+            tableBody.appendChild(row);
+            
+            // 初始化行数据（包含所有字段，包括隐藏字段）
+            const rowData = {
+                id: rowId,
+                name: '',
+                gender: '',
+                age: '',
+                molecularNumber: molecularNumber,
+                caseNumber: '',
+                diagnosis: '',
+                diagnosisNote: '',
+                code: '待计算',
+                len: '0', // 隐藏字段
+                name2: '', // 隐藏字段
+                molecularNumber2: molecularNumber, // 隐藏字段
+                date: dateString // 隐藏字段
+            };
+            
+            dataRows.push(rowData);
+            
+            // 为当前行的输入字段添加事件监听器
+            setupRowEventListeners(rowId);
+            
+            // 更新统计信息
+            updateStatistics();
+        }
+        
+        // 设置行事件监听器
+        function setupRowEventListeners(rowId) {
+            const rowElement = document.getElementById(`row-${rowId}`);
+            if (!rowElement) return;
+            
+            // 为所有输入字段添加事件监听器
+            const inputs = rowElement.querySelectorAll('.input-field, .select-field');
+            inputs.forEach(input => {
+                // 移除已有的事件监听器（避免重复）
+                input.removeEventListener('input', handleInputChange);
+                input.removeEventListener('change', handleInputChange);
+                
+                // 添加新的事件监听器
+                input.addEventListener('input', handleInputChange);
+                input.addEventListener('change', handleInputChange);
+            });
+            
+            // 为删除按钮添加事件监听器
+            const deleteBtn = rowElement.querySelector('.delete-btn');
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', function() {
+                    deleteRow(rowId);
+                });
+            }
+        }
+        
+        // 处理输入变化
+        function handleInputChange(event) {
+            const input = event.target;
+            const rowId = input.dataset.rowId;
+            
+            if (!rowId) return;
+            
+            // 获取行索引
+            const rowIndex = dataRows.findIndex(row => row.id.toString() === rowId.toString());
+            if (rowIndex === -1) return;
+            
+            // 获取行元素
+            const rowElement = document.getElementById(`row-${rowId}`);
+            if (!rowElement) return;
+            
+            // 更新数据
+            const className = input.className;
+            
+            if (className.includes('name-input')) {
+                dataRows[rowIndex].name = input.value;
+                // 更新隐藏字段：姓名2
+                dataRows[rowIndex].name2 = input.value;
+            } else if (className.includes('gender-select')) {
+                dataRows[rowIndex].gender = input.value;
+            } else if (className.includes('age-input')) {
+                dataRows[rowIndex].age = input.value;
+            } else if (className.includes('molecular-number-input')) {
+                const newMolecularNumber = input.value;
+                dataRows[rowIndex].molecularNumber = newMolecularNumber;
+                // 更新隐藏字段：分子号2
+                dataRows[rowIndex].molecularNumber2 = newMolecularNumber;
+            } else if (className.includes('case-number-input')) {
+                dataRows[rowIndex].caseNumber = input.value;
+            } else if (className.includes('diagnosis-input')) {
+                dataRows[rowIndex].diagnosis = input.value;
+            } else if (className.includes('diagnosis-note-input')) {
+                dataRows[rowIndex].diagnosisNote = input.value;
+            }
+            
+            // 自动计算相关字段
+            calculateAutoFields(rowId, rowIndex);
+            
+            // 更新统计信息
+            updateStatistics();
+        }
+        
+        // 删除行
+        function deleteRow(rowId) {
+            const rowIndex = dataRows.findIndex(row => row.id.toString() === rowId.toString());
+            if (rowIndex !== -1) {
+                dataRows.splice(rowIndex, 1);
+            }
+            
+            const rowElement = document.getElementById(`row-${rowId}`);
+            if (rowElement) {
+                rowElement.remove();
+            }
+            
+            // 如果删除了所有行，添加一个新行
+            if (dataRows.length === 0) {
+                addNewRow();
+            }
+            
+            // 更新统计信息
+            updateStatistics();
+            
+            showAlert('已删除数据行', 'info');
+        }
+        
+        // 计算自动字段
+        function calculateAutoFields(rowId, rowIndex) {
+            const rowData = dataRows[rowIndex];
+            const rowElement = document.getElementById(`row-${rowId}`);
+            if (!rowElement) return;
+            
+            // 1. 更新隐藏字段：姓名2（已经在上面的handleInputChange中处理）
+            
+            // 2. 更新隐藏字段：分子号2（已经在上面的handleInputChange中处理）
+            
+            // 3. 计算Code（新规则）
+            let code = '';
+            let explanation = '';
+            
+            // 前3位：分子号数字部分转16进制，补齐3位
+            let molecularHex = '000';
+            if (rowData.molecularNumber && rowData.molecularNumber.startsWith('K')) {
+                const numberPart = rowData.molecularNumber.substring(1);
+                const num = parseInt(numberPart, 10);
+                if (!isNaN(num)) {
+                    molecularHex = toHex3Digit(num);
+                }
+            }
+            code += molecularHex;
+            explanation += `分子号:${molecularHex} `;
+            
+            // 第4-6位：性别(1位) + 年龄(2位)
+            let genderAgePart = '';
+            
+            // 性别代码
+            let genderCode = 'G';
+            if (rowData.gender === '男') {
+                genderCode = 'M';
+            } else if (rowData.gender === '女') {
+                genderCode = 'F';
+            }
+            
+            // 年龄（2位，不足补0）
+            let agePart = '00';
+            if (rowData.age && !isNaN(rowData.age)) {
+                const ageNum = parseInt(rowData.age);
+                if (ageNum >= 0 && ageNum <= 99) {
+                    agePart = String(ageNum).padStart(2, '0');
+                } else if (ageNum > 99) {
+                    agePart = '99';
+                }
+            }
+            
+            genderAgePart = genderCode + agePart;
+            code += genderAgePart;
+            explanation += `性别年龄:${genderAgePart} `;
+            
+            // 第7-9位：年份(2位) + 月份代码(1位)
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = today.getMonth() + 1; // 0-11 → 1-12
+            
+            const yearPart = String(year).slice(-2); // 取后两位
+            const monthCode = getMonthCode(month);
+            
+            const yearMonthPart = yearPart + monthCode;
+            code += yearMonthPart;
+            explanation += `年月:${yearMonthPart} `;
+            
+            // 第10-12位：扩展位（固定V01）
+            code += 'V01';
+            explanation += `扩展:V01`;
+            
+            // 更新Code字段（界面显示）
+            rowData.code = code;
+            const codeElement = rowElement.querySelector('.code-field');
+            if (codeElement) {
+                codeElement.textContent = code;
+            }
+            
+            // 显示Code解释
+            const explanationElement = rowElement.querySelector('.code-explanation');
+            if (explanationElement) {
+                explanationElement.textContent = explanation;
+            }
+            
+            // 4. 更新隐藏字段：LEN（Code的字符串长度）
+            rowData.len = code.length.toString();
+            
+            // 5. 验证分子号格式
+            const molecularInput = rowElement.querySelector('.molecular-number-input');
+            if (molecularInput) {
+                if (/^K\d{4}$/.test(rowData.molecularNumber)) {
+                    molecularInput.classList.remove('invalid-field');
+                    molecularInput.classList.add('valid-field');
+                } else {
+                    molecularInput.classList.remove('valid-field');
+                    molecularInput.classList.add('invalid-field');
+                }
+            }
+        }
+        
+        // 更新统计信息
+        function updateStatistics() {
+            totalRecordsEl.textContent = dataRows.length;
+            
+            const maleCount = dataRows.filter(row => row.gender === '男').length;
+            const femaleCount = dataRows.filter(row => row.gender === '女').length;
+            const otherGenderCount = dataRows.filter(row => 
+                row.gender === '其他' || row.gender === '' || !row.gender
+            ).length;
+            
+            maleCountEl.textContent = maleCount;
+            femaleCountEl.textContent = femaleCount;
+            otherGenderCountEl.textContent = otherGenderCount;
+        }
+        
+        // 保存为Excel
+        function saveToExcel() {
+            if (dataRows.length === 0) {
+                showAlert('没有数据可以导出', 'info');
+                return;
+            }
+            
+            // 准备数据，按照指定顺序（包含所有字段，包括隐藏字段）
+            const excelData = dataRows.map(row => {
+                return {
+                    '姓名': row.name || '',
+                    '性别': row.gender || '',
+                    '年龄': row.age || '',
+                    '分子号': row.molecularNumber || '',
+                    '病案号': row.caseNumber || '',
+                    '诊断': row.diagnosis || '',
+                    '诊断备注': row.diagnosisNote || '',
+                    'Code': row.code || '',
+                    'Len': row.len || '', // 隐藏字段，但导出到Excel
+                    '姓名2': row.name2 || '', // 隐藏字段，但导出到Excel
+                    '分子号2': row.molecularNumber2 || '', // 隐藏字段，但导出到Excel
+                    '日期': row.date || '' // 隐藏字段，但导出到Excel
+                };
+            });
+            
+            // 创建工作表
+            const worksheet = XLSX.utils.json_to_sheet(excelData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "临床数据");
+            
+            // 设置列宽
+            const wscols = [
+                {wch: 10}, // 姓名
+                {wch: 6},  // 性别
+                {wch: 6},  // 年龄
+                {wch: 10}, // 分子号
+                {wch: 12}, // 病案号
+                {wch: 20}, // 诊断
+                {wch: 15}, // 诊断备注
+                {wch: 15}, // Code
+                {wch: 6},  // Len（隐藏字段）
+                {wch: 10}, // 姓名2（隐藏字段）
+                {wch: 10}, // 分子号2（隐藏字段）
+                {wch: 12}  // 日期（隐藏字段）
+            ];
+            worksheet['!cols'] = wscols;
+            
+            // 生成文件名
+            const today = new Date();
+            const dateString = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
+            const fileName = `临床数据_${dateString}.xlsx`;
+            
+            // 导出文件
+            XLSX.writeFile(workbook, fileName);
+            
+            // 显示成功消息
+            showAlert(`数据已成功导出为 ${fileName}，包含所有字段（包括隐藏字段）`, 'success');
+        }
+        
+        // 重置所有
+        function resetAll() {
+            if (confirm('确定要重置所有数据吗？这将清除所有已输入的内容。')) {
+                // 清空数据
+                dataRows = [];
+                tableBody.innerHTML = '';
+                
+                // 添加新行
+                addNewRow();
+                
+                // 显示提示信息
+                showAlert('已重置所有数据', 'info');
+            }
+        }
+        
+        // 显示提示信息
+        function showAlert(message, type) {
+            if (type === 'success') {
+                successAlert.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
+                successAlert.style.display = 'block';
+                infoAlert.style.display = 'none';
+                
+                // 5秒后隐藏成功消息
+                setTimeout(() => {
+                    successAlert.style.display = 'none';
+                    infoAlert.style.display = 'block';
+                }, 5000);
+            } else {
+                infoAlert.innerHTML = `<i class="fas fa-info-circle"></i> ${message}`;
+                infoAlert.style.display = 'block';
+                successAlert.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
