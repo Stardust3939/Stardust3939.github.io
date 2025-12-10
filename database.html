@@ -147,7 +147,7 @@
         .data-table {
             width: 100%;
             border-collapse: collapse;
-            min-width: 1100px;
+            min-width: 1200px;
         }
         
         .data-table thead {
@@ -384,6 +384,12 @@
         .invalid-field {
             border-color: var(--accent-color) !important;
         }
+        
+        /* 就诊次数特殊样式 */
+        .visit-count-input {
+            width: 100%;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -431,6 +437,7 @@
                             <th>病案号</th>
                             <th>诊断</th>
                             <th>诊断备注</th>
+                            <th>就诊次数</th>
                             <th>Code</th>
                         </tr>
                     </thead>
@@ -458,14 +465,18 @@
                     <div class="stat-title">其他性别</div>
                     <div class="stat-value" id="otherGenderCount">0</div>
                 </div>
+                <div class="stat-card">
+                    <div class="stat-title">平均就诊次数</div>
+                    <div class="stat-value" id="avgVisitCount">0.0</div>
+                </div>
             </div>
             
             <!-- Code格式说明 -->
             <div style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 6px; border: 1px solid #e9ecef;">
-                <h4 style="margin-bottom: 10px; color: #2c3e50;"><i class="fas fa-info-circle"></i> Code格式说明</h4>
+                <h4 style="margin-bottom: 10px; color: #2c3e50;"><i class="fas fa-info-circle"></i> Code格式说明（支持复诊）</h4>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 10px; font-size: 0.85rem;">
                     <div>
-                        <strong>前3位</strong>: 分子号数字部分转16进制 (例: K0012 → 12<sub>10</sub> → C<sub>16</sub> → 00C)
+                        <strong>前3位</strong>: 分子号数字部分转32进制 (0-9,A-V，例: K0012 → 12<sub>10</sub> → 00C<sub>32</sub>)
                     </div>
                     <div>
                         <strong>4-6位</strong>: 性别(1位) + 年龄(2位) (例: 男28岁 → M28)
@@ -474,14 +485,17 @@
                         <strong>7-9位</strong>: 年份(2位) + 月份(1位) (例: 2025年10月 → 25A)
                     </div>
                     <div>
-                        <strong>10-12位</strong>: 扩展位 (固定: V01)
+                        <strong>10-12位</strong>: 就诊次数(1位,16进制) + 扩展(2位,固定V1) (例: 初诊 → 0V1, 第5次复诊 → 5V1)
                     </div>
+                </div>
+                <div style="margin-top: 10px; font-size: 0.8rem; color: #6c757d;">
+                    <strong>就诊次数</strong>: 0=初诊, 1-9=第1-9次复诊, A=第10次, B=第11次, F=第15次 (最大15次)
                 </div>
             </div>
         </div>
         
         <footer>
-            <p>© 2025 临床数据录入系统 | 新版Code格式: 3位16进制分子号+性别年龄+年月+V01</p>
+            <p>© 2025 临床数据录入系统 | Stardust3939</p>
         </footer>
     </div>
 
@@ -500,6 +514,13 @@
         const maleCountEl = document.getElementById('maleCount');
         const femaleCountEl = document.getElementById('femaleCount');
         const otherGenderCountEl = document.getElementById('otherGenderCount');
+        const avgVisitCountEl = document.getElementById('avgVisitCount');
+        
+        // 32进制字符集 (0-9, A-V, 排除I,O,U)
+        const BASE32_CHARS = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
+        
+        // 16进制字符集 (用于就诊次数)
+        const HEX_CHARS = '0123456789ABCDEF';
         
         // 初始化
         document.addEventListener('DOMContentLoaded', function() {
@@ -547,10 +568,27 @@
             return `K${String(maxNumber + 1).padStart(4, '0')}`;
         }
         
-        // 数字转16进制并补齐3位
-        function toHex3Digit(number) {
-            const hex = parseInt(number).toString(16).toUpperCase();
-            return hex.padStart(3, '0');
+        // 十进制转32进制（使用自定义字符集）
+        function toBase32(num) {
+            if (num === 0) return '000';
+            
+            let result = '';
+            let n = num;
+            
+            while (n > 0) {
+                const remainder = n % 32;
+                result = BASE32_CHARS[remainder] + result;
+                n = Math.floor(n / 32);
+            }
+            
+            // 确保结果为3位
+            return result.padStart(3, '0');
+        }
+        
+        // 十进制转16进制（用于就诊次数，1位）
+        function toVisitCountHex(num) {
+            if (num < 0 || num > 15) return '0'; // 限制在0-15之间
+            return HEX_CHARS[num];
         }
         
         // 获取月份代码 (1-9月:1-9, 10-12月:A-C)
@@ -567,15 +605,23 @@
             return '0'; // 默认值
         }
         
+        // 获取短日期格式 YYMMDD
+        function getShortDate() {
+            const today = new Date();
+            const year = String(today.getFullYear()).slice(-2); // 取后两位
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            return year + month + day; // 例如: 251210
+        }
+        
         // 添加新行
         function addNewRow() {
             const rowId = Date.now() + Math.random(); // 生成唯一ID
             const row = document.createElement('tr');
             row.id = `row-${rowId}`;
             
-            // 获取当前日期（用于Excel导出，不在界面显示）
-            const today = new Date();
-            const dateString = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
+            // 获取当前日期（用于Excel导出，短格式）
+            const shortDate = getShortDate();
             
             // 获取下一个分子号（基于现有最大分子号）
             const molecularNumber = getNextMolecularNumber();
@@ -621,6 +667,10 @@
                     <input type="text" class="input-field diagnosis-note-input" data-row-id="${rowId}" placeholder="诊断备注（可选）">
                 </td>
                 <td>
+                    <div class="field-label">就诊次数</div>
+                    <input type="number" class="input-field visit-count-input" data-row-id="${rowId}" value="0" min="0" max="15" placeholder="0=初诊">
+                </td>
+                <td>
                     <div class="field-label">Code</div>
                     <div class="code-field" data-row-id="${rowId}">待计算</div>
                     <div class="code-explanation" data-row-id="${rowId}"></div>
@@ -639,11 +689,12 @@
                 caseNumber: '',
                 diagnosis: '',
                 diagnosisNote: '',
+                visitCount: 0, // 新增：就诊次数
                 code: '待计算',
                 len: '0', // 隐藏字段
                 name2: '', // 隐藏字段
                 molecularNumber2: molecularNumber, // 隐藏字段
-                date: dateString // 隐藏字段
+                date: shortDate // 隐藏字段，短格式日期
             };
             
             dataRows.push(rowData);
@@ -718,6 +769,12 @@
                 dataRows[rowIndex].diagnosis = input.value;
             } else if (className.includes('diagnosis-note-input')) {
                 dataRows[rowIndex].diagnosisNote = input.value;
+            } else if (className.includes('visit-count-input')) {
+                // 新增：就诊次数
+                const visitCount = parseInt(input.value) || 0;
+                // 限制在0-15之间
+                dataRows[rowIndex].visitCount = Math.max(0, Math.min(15, visitCount));
+                input.value = dataRows[rowIndex].visitCount; // 确保显示正确值
             }
             
             // 自动计算相关字段
@@ -764,17 +821,17 @@
             let code = '';
             let explanation = '';
             
-            // 前3位：分子号数字部分转16进制，补齐3位
-            let molecularHex = '000';
+            // 前3位：分子号数字部分转32进制，补齐3位
+            let molecularBase32 = '000';
             if (rowData.molecularNumber && rowData.molecularNumber.startsWith('K')) {
                 const numberPart = rowData.molecularNumber.substring(1);
                 const num = parseInt(numberPart, 10);
                 if (!isNaN(num)) {
-                    molecularHex = toHex3Digit(num);
+                    molecularBase32 = toBase32(num);
                 }
             }
-            code += molecularHex;
-            explanation += `分子号:${molecularHex} `;
+            code += molecularBase32;
+            explanation += `分子号:${molecularBase32} `;
             
             // 第4-6位：性别(1位) + 年龄(2位)
             let genderAgePart = '';
@@ -814,15 +871,23 @@
             code += yearMonthPart;
             explanation += `年月:${yearMonthPart} `;
             
-            // 第10-12位：扩展位（固定V01）
-            code += 'V01';
-            explanation += `扩展:V01`;
+            // 第10-12位：就诊次数(1位,16进制) + 扩展位(2位,固定V1)
+            const visitCountHex = toVisitCountHex(rowData.visitCount || 0);
+            const extensionPart = visitCountHex + 'V1'; // 例如: 0V1, 5V1, AV1
+            code += extensionPart;
+            explanation += `就诊:${visitCountHex}+V1`;
             
             // 更新Code字段（界面显示）
             rowData.code = code;
             const codeElement = rowElement.querySelector('.code-field');
             if (codeElement) {
                 codeElement.textContent = code;
+                // 如果就诊次数>0，用不同颜色显示
+                if (rowData.visitCount > 0) {
+                    codeElement.style.color = '#e74c3c'; // 红色表示复诊
+                } else {
+                    codeElement.style.color = '#2c3e50'; // 黑色表示初诊
+                }
             }
             
             // 显示Code解释
@@ -857,6 +922,17 @@
                 row.gender === '其他' || row.gender === '' || !row.gender
             ).length;
             
+            // 计算平均就诊次数
+            let totalVisitCount = 0;
+            let visitCountData = dataRows.filter(row => row.visitCount !== undefined);
+            if (visitCountData.length > 0) {
+                totalVisitCount = visitCountData.reduce((sum, row) => sum + (row.visitCount || 0), 0);
+                const avgVisitCount = (totalVisitCount / visitCountData.length).toFixed(1);
+                avgVisitCountEl.textContent = avgVisitCount;
+            } else {
+                avgVisitCountEl.textContent = '0.0';
+            }
+            
             maleCountEl.textContent = maleCount;
             femaleCountEl.textContent = femaleCount;
             otherGenderCountEl.textContent = otherGenderCount;
@@ -879,11 +955,12 @@
                     '病案号': row.caseNumber || '',
                     '诊断': row.diagnosis || '',
                     '诊断备注': row.diagnosisNote || '',
+                    '就诊次数': row.visitCount || 0, // 新增字段
                     'Code': row.code || '',
                     'Len': row.len || '', // 隐藏字段，但导出到Excel
                     '姓名2': row.name2 || '', // 隐藏字段，但导出到Excel
                     '分子号2': row.molecularNumber2 || '', // 隐藏字段，但导出到Excel
-                    '日期': row.date || '' // 隐藏字段，但导出到Excel
+                    '日期': row.date || '' // 隐藏字段，短格式日期
                 };
             });
             
@@ -901,11 +978,12 @@
                 {wch: 12}, // 病案号
                 {wch: 20}, // 诊断
                 {wch: 15}, // 诊断备注
+                {wch: 8},  // 就诊次数（新增）
                 {wch: 15}, // Code
                 {wch: 6},  // Len（隐藏字段）
                 {wch: 10}, // 姓名2（隐藏字段）
                 {wch: 10}, // 分子号2（隐藏字段）
-                {wch: 12}  // 日期（隐藏字段）
+                {wch: 10}  // 日期（隐藏字段，短格式）
             ];
             worksheet['!cols'] = wscols;
             
@@ -918,7 +996,7 @@
             XLSX.writeFile(workbook, fileName);
             
             // 显示成功消息
-            showAlert(`数据已成功导出为 ${fileName}，包含所有字段（包括隐藏字段）`, 'success');
+            showAlert(`数据已成功导出为 ${fileName}，包含就诊次数和短格式日期`, 'success');
         }
         
         // 重置所有
