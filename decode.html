@@ -272,12 +272,33 @@
         .history-time {
             font-size: 0.85rem;
             color: #9ca3af;
+            margin-top: 4px;
         }
         
         .history-details {
-            font-size: 0.85rem;
+            font-size: 0.9rem;
+            color: #4b5563;
+            margin-top: 8px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .history-detail-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .history-detail-label {
             color: #6b7280;
-            margin-top: 4px;
+            font-size: 0.85rem;
+        }
+        
+        .history-detail-value {
+            font-weight: 600;
+            color: #374151;
         }
         
         .status {
@@ -404,6 +425,12 @@
             .result-grid {
                 grid-template-columns: 1fr;
             }
+            
+            .history-details {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
         }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -526,7 +553,7 @@
     </div>
     
     <div class="footer">
-        <p>条形码解析系统 | version 20251210 16:30 | Stardust3939</p>
+        <p>条形码解析系统 | version 251210 16:50 | Stardust3939</p>
     </div>
 
     <script>
@@ -557,11 +584,11 @@
         // 自定义32进制字符集（不含I、O、U）
         const CUSTOM_BASE32_CHARS = '0123456789ABCDEFGHJKLMNPQRSTVWXYZ';
         
-        // 月份16进制到名称的映射
-        const MONTH_NAMES = {
-            '1': '一月', '2': '二月', '3': '三月', '4': '四月',
-            '5': '五月', '6': '六月', '7': '七月', '8': '八月',
-            '9': '九月', 'A': '十月', 'B': '十一月', 'C': '十二月'
+        // 月份16进制到数字的映射
+        const MONTH_MAP = {
+            '1': '1', '2': '2', '3': '3', '4': '4',
+            '5': '5', '6': '6', '7': '7', '8': '8',
+            '9': '9', 'A': '10', 'B': '11', 'C': '12'
         };
         
         // 性别映射
@@ -642,6 +669,13 @@
             return true;
         }
         
+        // 格式化分子号为5位：K + 4位数字，不足补0
+        function formatMolecularId(decimalId) {
+            // 确保是5位：K + 4位数字
+            const paddedNumber = String(decimalId).padStart(4, '0');
+            return `K${paddedNumber}`;
+        }
+        
         // 解析条形码
         function parseBarcode(barcode) {
             console.log('开始解析条形码:', barcode);
@@ -687,8 +721,9 @@
             }
             
             // 验证月份（16进制）
-            if (!/^[0-9A-Fa-f]$/.test(monthCode)) {
-                throw new Error(`无效的月份代码: ${monthCode}，应为16进制数字(0-9,A-F)`);
+            const monthCodeUpper = monthCode.toUpperCase();
+            if (!/^[0-9A-Fa-f]$/.test(monthCode) || !MONTH_MAP[monthCodeUpper]) {
+                throw new Error(`无效的月份代码: ${monthCode}，应为16进制数字(1-9,A,B,C)`);
             }
             
             // 验证随访次数（16进制）
@@ -697,16 +732,17 @@
             }
             
             // 解析各部分
-            const molecularId = fromCustomBase32(molecularCode);
+            const molecularDecimal = fromCustomBase32(molecularCode);
+            const molecularId = formatMolecularId(molecularDecimal); // 格式化为K+4位数字
             const genderInfo = GENDER_MAP[genderUpper];
             const age = parseInt(ageCode, 10);
             const year = 2000 + parseInt(yearCode, 10);
-            const month = parseInt(monthCode, 16);
-            const monthName = MONTH_NAMES[monthCode.toUpperCase()] || month + '月';
+            const monthNum = parseInt(monthCode, 16);
+            const monthDisplay = MONTH_MAP[monthCodeUpper]; // 使用阿拉伯数字
             const followUp = parseInt(followUpCode, 16);
             
             // 验证月份范围
-            if (isNaN(month) || month < 1 || month > 12) {
+            if (isNaN(monthNum) || monthNum < 1 || monthNum > 12) {
                 throw new Error(`月份超出范围: ${monthCode}，应为1-12的16进制表示`);
             }
             
@@ -723,30 +759,29 @@
             console.log('解析成功:', {
                 original: barcode,
                 molecular: molecularId,
+                molecularDecimal: molecularDecimal,
                 gender: genderUpper,
                 age: age,
                 year: year,
-                month: month,
+                month: monthNum,
                 followUp: followUp
             });
             
             return {
                 original: barcode,
-                molecular: `K${molecularId}`,
+                molecular: molecularId,
                 molecularRaw: molecularCode,
-                molecularDecimal: molecularId,
+                molecularDecimal: molecularDecimal,
                 gender: genderUpper,
                 genderName: genderInfo.name,
                 genderIcon: genderInfo.icon,
                 genderClass: genderInfo.class,
                 age: age,
                 year: year,
-                month: month,
-                monthName: monthName,
-                monthHex: monthCode.toUpperCase(),
+                month: monthNum,
+                monthDisplay: monthDisplay, // 使用阿拉伯数字
+                samplingDate: `${year}年${monthDisplay}月`, // 格式：2023年9月
                 followUp: followUp,
-                followUpHex: followUpCode.toUpperCase(),
-                samplingDate: `${year}年${monthName}`,
                 extension: extensionCode,
                 timestamp: new Date().toLocaleString('zh-CN')
             };
@@ -760,16 +795,16 @@
             
             // 更新结果
             originalCodeEl.textContent = result.original;
-            molecularIdEl.innerHTML = `${result.molecular}<br><small>(${result.molecularRaw}<sub>32</sub> = ${result.molecularDecimal}<sub>10</sub>)</small>`;
+            molecularIdEl.textContent = result.molecular; // 已经格式化为5位
             
             genderEl.innerHTML = `${result.genderIcon} ${result.genderName}`;
             genderEl.className = `value ${result.genderClass}`;
             
             ageEl.textContent = `${result.age} 岁`;
             
-            samplingDateEl.innerHTML = `${result.samplingDate}<br><small>${result.yearCode || result.year.toString().substring(2)}年${result.monthHex}<sub>16</sub>月</small>`;
+            samplingDateEl.textContent = result.samplingDate; // 格式：2023年9月
             
-            followUpEl.innerHTML = `第 ${result.followUp} 次<br><small>(${result.followUpHex}<sub>16</sub>)</small>`;
+            followUpEl.textContent = `第 ${result.followUp} 次`;
             
             showStatus(`成功解析条形码: ${result.original}`, 'success');
         }
@@ -821,14 +856,33 @@
                 const historyItem = document.createElement('div');
                 historyItem.className = 'history-item';
                 historyItem.innerHTML = `
-                    <div>
+                    <div style="flex: 1;">
                         <div class="history-code">${item.original}</div>
                         <div class="history-details">
-                            ${item.genderName} | ${item.age}岁 | ${item.samplingDate} | 随访${item.followUp}次
+                            <div class="history-detail-item">
+                                <span class="history-detail-label">分子号:</span>
+                                <span class="history-detail-value">${item.molecular}</span>
+                            </div>
+                            <div class="history-detail-item">
+                                <span class="history-detail-label">性别:</span>
+                                <span class="history-detail-value">${item.genderName}</span>
+                            </div>
+                            <div class="history-detail-item">
+                                <span class="history-detail-label">年龄:</span>
+                                <span class="history-detail-value">${item.age}岁</span>
+                            </div>
+                            <div class="history-detail-item">
+                                <span class="history-detail-label">采样日期:</span>
+                                <span class="history-detail-value">${item.samplingDate}</span>
+                            </div>
+                            <div class="history-detail-item">
+                                <span class="history-detail-label">随访次数:</span>
+                                <span class="history-detail-value">第${item.followUp}次</span>
+                            </div>
                         </div>
                         <div class="history-time">${item.timestamp}</div>
                     </div>
-                    <div>
+                    <div style="margin-left: 15px;">
                         <span style="color: #6b7280; font-size: 0.9rem;">#${index + 1}</span>
                     </div>
                 `;
@@ -951,22 +1005,15 @@
             }
             
             try {
-                // 准备数据
+                // 准备数据 - 只包含需要的字段
                 const data = scanHistory.map((item, index) => ({
                     '序号': index + 1,
-                    '条形码': item.original,
+                    '原始条形码': item.original,
                     '分子号': item.molecular,
-                    '分子号(32进制)': item.molecularRaw,
-                    '分子号(10进制)': item.molecularDecimal,
                     '性别': item.genderName,
                     '年龄': item.age,
-                    '采样年份': item.year,
-                    '采样月份': item.month,
-                    '月份(16进制)': item.monthHex,
-                    '随访次数': item.followUp,
-                    '随访次数(16进制)': item.followUpHex,
                     '采样日期': item.samplingDate,
-                    '扩展位': item.extension,
+                    '随访次数': `第${item.followUp}次`,
                     '解析时间': item.timestamp
                 }));
                 
@@ -977,19 +1024,12 @@
                 // 设置列宽
                 const wscols = [
                     { wch: 6 },   // 序号
-                    { wch: 15 },  // 条形码
-                    { wch: 12 },  // 分子号
-                    { wch: 15 },  // 分子号(32进制)
-                    { wch: 15 },  // 分子号(10进制)
+                    { wch: 15 },  // 原始条形码
+                    { wch: 10 },  // 分子号
                     { wch: 8 },   // 性别
                     { wch: 6 },   // 年龄
-                    { wch: 10 },  // 采样年份
-                    { wch: 10 },  // 采样月份
-                    { wch: 12 },  // 月份(16进制)
-                    { wch: 10 },  // 随访次数
-                    { wch: 15 },  // 随访次数(16进制)
                     { wch: 12 },  // 采样日期
-                    { wch: 10 },  // 扩展位
+                    { wch: 10 },  // 随访次数
                     { wch: 20 }   // 解析时间
                 ];
                 ws['!cols'] = wscols;
@@ -998,7 +1038,7 @@
                 XLSX.utils.book_append_sheet(wb, ws, '条形码解析数据');
                 
                 // 生成Excel文件并下载
-                const filename = `barcode_data_${new Date().toISOString().slice(0, 10)}.xlsx`;
+                const filename = `条形码数据_${new Date().toISOString().slice(0, 10)}.xlsx`;
                 XLSX.writeFile(wb, filename);
                 
                 showStatus(`已导出 ${scanHistory.length} 条数据到 ${filename}`, 'success');
