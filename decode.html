@@ -91,47 +91,14 @@
             overflow: hidden;
         }
         
-        #scanner-view {
+        #video {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
         
-        #qr-reader {
-            width: 100% !important;
-            height: 300px !important;
-            border: none !important;
-        }
-        
-        #qr-reader__dashboard {
-            padding: 10px;
-            background: rgba(0, 0, 0, 0.7);
-            color: white;
-        }
-        
-        #qr-reader__camera_selection {
-            width: 100%;
-            margin-bottom: 10px;
-            padding: 8px;
-            border-radius: 4px;
-            background: #333;
-            color: white;
-            border: 1px solid #555;
-        }
-        
-        #qr-reader__dashboard_section_csr button {
-            background: #3498db;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            margin: 5px;
-            font-weight: bold;
-        }
-        
-        #qr-reader__dashboard_section_csr button:hover {
-            background: #2980b9;
+        #canvas {
+            display: none;
         }
         
         .scanner-placeholder {
@@ -145,6 +112,32 @@
             font-size: 3rem;
             margin-bottom: 15px;
             color: #3498db;
+        }
+        
+        .scanner-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .scan-line {
+            width: 80%;
+            height: 2px;
+            background-color: #00ff00;
+            position: absolute;
+            box-shadow: 0 0 10px #00ff00;
+            animation: scan 2s linear infinite;
+        }
+        
+        @keyframes scan {
+            0% { top: 10%; }
+            50% { top: 90%; }
+            100% { top: 10%; }
         }
         
         .controls {
@@ -312,6 +305,11 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            cursor: pointer;
+        }
+        
+        .history-item:hover {
+            background-color: #f5f5f5;
         }
         
         .history-item:last-child {
@@ -389,18 +387,6 @@
             font-weight: bold;
         }
         
-        .focus-hint {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 8px 12px;
-            border-radius: 4px;
-            font-size: 0.9rem;
-            z-index: 10;
-        }
-        
         .debug-info {
             background-color: #2c3e50;
             color: white;
@@ -430,6 +416,15 @@
             font-size: 0.9rem;
             color: #666;
         }
+        
+        .scan-frame {
+            position: absolute;
+            width: 80%;
+            height: 100px;
+            border: 2px solid #3498db;
+            box-shadow: 0 0 20px rgba(52, 152, 219, 0.5);
+            pointer-events: none;
+        }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -446,21 +441,23 @@
             <div id="status" class="status info">准备就绪，请开始扫描或手动输入条形码</div>
             
             <div class="scanner-container">
-                <div class="focus-hint" id="focus-hint" style="display: none;">
-                    <i class="fas fa-crosshairs"></i> 点击屏幕可手动对焦
-                </div>
                 <div class="scanner-placeholder" id="scanner-placeholder">
                     <i class="fas fa-barcode"></i>
                     <p>点击"开始扫描"按钮启动摄像头扫描条形码</p>
                 </div>
-                <div id="qr-reader" style="display: none;"></div>
+                <div class="scanner-overlay" style="display: none;" id="scanner-overlay">
+                    <div class="scan-frame"></div>
+                    <div class="scan-line"></div>
+                </div>
+                <video id="video" autoplay playsinline style="display: none;"></video>
+                <canvas id="canvas"></canvas>
             </div>
             
             <div class="scanner-help">
                 <p><strong>扫描技巧：</strong></p>
                 <ul>
-                    <li>确保条形码清晰对焦</li>
-                    <li>保持条形码在扫描框内</li>
+                    <li>确保条形码在扫描框内</li>
+                    <li>保持条形码清晰对焦</li>
                     <li>确保光线充足</li>
                     <li>条形码与摄像头平行，避免倾斜</li>
                     <li>如果无法扫描，请尝试手动输入</li>
@@ -486,7 +483,7 @@
                 <h3><i class="fas fa-keyboard"></i> 手动输入</h3>
                 <div class="input-group">
                     <label for="manual-code">输入12位条形码：</label>
-                    <input type="text" id="manual-code" maxlength="12" placeholder="例如：1A5M251229001">
+                    <input type="text" id="manual-code" maxlength="12" placeholder="例如：1A5M251229101">
                     <button id="manual-submit" class="btn btn-primary" style="margin-top: 10px; width: 100%;">
                         <i class="fas fa-check"></i> 解析条形码
                     </button>
@@ -557,567 +554,4 @@
                     <li><strong>第4位</strong>: 性别 (M=男, F=女, G=其他)</li>
                     <li><strong>第5-6位</strong>: 10进制年龄</li>
                     <li><strong>第7-8位</strong>: 收集年份后两位 (完整年份为20XX)</li>
-                    <li><strong>第9位</strong>: 16进制月份 (1-9,A,B,C)</li>
-                    <li><strong>第10位</strong>: 16进制随访次数</li>
-                    <li><strong>第11-12位</strong>: 扩展位 (v1版本忽略)</li>
-                </ul>
-            </div>
-        </div>
-    </div>
-    
-    <div class="history-section section">
-        <h2 class="section-title"><i class="fas fa-history"></i> 扫描历史</h2>
-        <div class="history-list" id="history-list">
-            <!-- 历史记录会动态添加到这里 -->
-            <div class="history-item">
-                <span class="history-code">暂无扫描记录</span>
-                <span class="history-time"></span>
-            </div>
-        </div>
-        <button id="clear-history" class="btn btn-danger" style="margin-top: 15px;">
-            <i class="fas fa-trash"></i> 清除历史
-        </button>
-    </div>
-    
-    <div class="footer">
-        <p>Code93条形码解析系统 v1.0 | 设计用于医疗样本数据采集</p>
-        <p>注意：本系统仅用于解析符合特定格式的12位Code93条形码</p>
-    </div>
-
-    <!-- 引入条形码扫描库 -->
-    <script src="https://unpkg.com/html5-qrcode"></script>
-    <script>
-        // DOM元素
-        const startBtn = document.getElementById('start-btn');
-        const stopBtn = document.getElementById('stop-btn');
-        const testBtn = document.getElementById('test-btn');
-        const debugBtn = document.getElementById('debug-btn');
-        const manualSubmit = document.getElementById('manual-submit');
-        const manualCode = document.getElementById('manual-code');
-        const statusDiv = document.getElementById('status');
-        const scannerPlaceholder = document.getElementById('scanner-placeholder');
-        const clearHistoryBtn = document.getElementById('clear-history');
-        const historyList = document.getElementById('history-list');
-        const qrReader = document.getElementById('qr-reader');
-        const focusHint = document.getElementById('focus-hint');
-        const debugInfo = document.getElementById('debug-info');
-        const debugLog = document.getElementById('debug-log');
-        
-        // 结果元素
-        const originalCodeEl = document.getElementById('original-code');
-        const molecularIdEl = document.getElementById('molecular-id');
-        const genderEl = document.getElementById('gender');
-        const ageEl = document.getElementById('age');
-        const yearEl = document.getElementById('year');
-        const monthEl = document.getElementById('month');
-        const followUpEl = document.getElementById('follow-up');
-        
-        // 状态变量
-        let html5QrcodeScanner = null;
-        let isScanning = false;
-        let currentStream = null;
-        let debugMode = false;
-        let scanHistory = JSON.parse(localStorage.getItem('barcodeScanHistory')) || [];
-        
-        // 初始化显示历史记录
-        updateHistoryDisplay();
-        
-        // 工具函数：显示调试信息
-        function logDebug(message) {
-            if (!debugMode) return;
-            
-            const timestamp = new Date().toLocaleTimeString();
-            const logEntry = document.createElement('div');
-            logEntry.textContent = `[${timestamp}] ${message}`;
-            debugLog.appendChild(logEntry);
-            
-            // 保持日志长度
-            if (debugLog.children.length > 10) {
-                debugLog.removeChild(debugLog.firstChild);
-            }
-            
-            debugLog.scrollTop = debugLog.scrollHeight;
-        }
-        
-        // 工具函数：显示状态消息
-        function showStatus(message, type = 'info') {
-            statusDiv.textContent = message;
-            statusDiv.className = 'status ' + type;
-            statusDiv.style.display = 'block';
-            
-            logDebug(`状态: ${message}`);
-            
-            // 3秒后自动隐藏信息类消息
-            if (type === 'info') {
-                setTimeout(() => {
-                    statusDiv.style.display = 'none';
-                }, 3000);
-            }
-        }
-        
-        // 工具函数：32进制转10进制
-        function fromBase32(str) {
-            const base32Chars = '0123456789ABCDEFGHIJKLMNOPQRSTUV';
-            let result = 0;
-            
-            for (let i = 0; i < str.length; i++) {
-                const char = str[i].toUpperCase();
-                const value = base32Chars.indexOf(char);
-                if (value === -1) {
-                    throw new Error(`无效的32进制字符: ${char}`);
-                }
-                result = result * 32 + value;
-            }
-            
-            return result;
-        }
-        
-        // 工具函数：解析条形码
-        function parseBarcode(barcode) {
-            // 验证条形码长度
-            if (barcode.length !== 12) {
-                throw new Error(`条形码长度必须为12位，当前为${barcode.length}位`);
-            }
-            
-            // 验证字符（字母数字）
-            if (!/^[A-Za-z0-9]+$/.test(barcode)) {
-                throw new Error('条形码只能包含字母和数字');
-            }
-            
-            // 分解条形码
-            const molecularCode = barcode.substring(0, 3); // 前3位
-            const genderCode = barcode[3]; // 第4位
-            const ageCode = barcode.substring(4, 6); // 第5-6位
-            const yearCode = barcode.substring(6, 8); // 第7-8位
-            const monthCode = barcode[8]; // 第9位
-            const followUpCode = barcode[9]; // 第10位
-            const extensionCode = barcode.substring(10, 12); // 第11-12位（扩展位）
-            
-            // 验证性别代码
-            const genderUpper = genderCode.toUpperCase();
-            if (!['M', 'F', 'G'].includes(genderUpper)) {
-                throw new Error(`无效的性别代码: ${genderCode}，应为 M、F 或 G`);
-            }
-            
-            // 验证年龄（应为数字）
-            if (!/^\d{2}$/.test(ageCode)) {
-                throw new Error(`无效的年龄代码: ${ageCode}，应为2位数字`);
-            }
-            
-            // 验证年份（应为数字）
-            if (!/^\d{2}$/.test(yearCode)) {
-                throw new Error(`无效的年份代码: ${yearCode}，应为2位数字`);
-            }
-            
-            // 解析各部分
-            const molecularId = fromBase32(molecularCode);
-            const gender = genderUpper;
-            const age = parseInt(ageCode, 10);
-            const year = 2000 + parseInt(yearCode, 10);
-            const month = parseInt(monthCode, 16);
-            const followUp = parseInt(followUpCode, 16);
-            
-            // 验证月份范围
-            if (isNaN(month) || month < 1 || month > 12) {
-                throw new Error(`月份超出范围: ${monthCode}，应为1-12的16进制表示`);
-            }
-            
-            // 验证年龄范围
-            if (age < 0 || age > 120) {
-                throw new Error(`年龄超出范围: ${age}，应为0-120`);
-            }
-            
-            // 验证年份范围
-            if (year < 2000 || year > 2099) {
-                throw new Error(`年份超出范围: ${year}，应为2000-2099`);
-            }
-            
-            return {
-                original: barcode,
-                molecular: `K${molecularId}`,
-                gender: gender,
-                age: age,
-                year: year,
-                month: month,
-                followUp: followUp,
-                extension: extensionCode
-            };
-        }
-        
-        // 工具函数：显示解析结果
-        function displayResult(result) {
-            originalCodeEl.textContent = result.original;
-            molecularIdEl.textContent = result.molecular;
-            
-            // 根据性别设置不同颜色
-            genderEl.innerHTML = result.gender;
-            genderEl.className = `gender-${result.gender.toLowerCase()}`;
-            
-            ageEl.textContent = result.age;
-            yearEl.textContent = result.year;
-            monthEl.textContent = `${result.month} (0x${result.month.toString(16).toUpperCase()})`;
-            followUpEl.textContent = `${result.followUp} (0x${result.followUp.toString(16).toUpperCase()})`;
-            
-            showStatus(`成功解析条形码: ${result.original}`, 'success');
-            logDebug(`解析成功: ${result.original}`);
-        }
-        
-        // 工具函数：添加到历史记录
-        function addToHistory(barcode, result) {
-            const timestamp = new Date().toLocaleString('zh-CN');
-            const historyItem = {
-                barcode: barcode,
-                timestamp: timestamp,
-                result: result
-            };
-            
-            // 添加到历史记录数组开头
-            scanHistory.unshift(historyItem);
-            
-            // 限制历史记录数量
-            if (scanHistory.length > 20) {
-                scanHistory = scanHistory.slice(0, 20);
-            }
-            
-            // 保存到本地存储
-            localStorage.setItem('barcodeScanHistory', JSON.stringify(scanHistory));
-            
-            // 更新显示
-            updateHistoryDisplay();
-        }
-        
-        // 工具函数：更新历史记录显示
-        function updateHistoryDisplay() {
-            if (scanHistory.length === 0) {
-                historyList.innerHTML = `
-                    <div class="history-item">
-                        <span class="history-code">暂无扫描记录</span>
-                        <span class="history-time"></span>
-                    </div>
-                `;
-                return;
-            }
-            
-            historyList.innerHTML = '';
-            
-            scanHistory.forEach(item => {
-                const historyItem = document.createElement('div');
-                historyItem.className = 'history-item';
-                historyItem.innerHTML = `
-                    <span class="history-code">${item.barcode}</span>
-                    <span class="history-time">${item.timestamp}</span>
-                `;
-                
-                // 点击历史记录项可以重新解析
-                historyItem.addEventListener('click', () => {
-                    manualCode.value = item.barcode;
-                    processBarcode(item.barcode);
-                });
-                
-                historyList.appendChild(historyItem);
-            });
-        }
-        
-        // 处理条形码
-        function processBarcode(barcode) {
-            try {
-                logDebug(`开始解析条形码: ${barcode}`);
-                const result = parseBarcode(barcode);
-                displayResult(result);
-                addToHistory(barcode, result);
-            } catch (error) {
-                showStatus(`解析错误: ${error.message}`, 'error');
-                logDebug(`解析错误: ${error.message}`);
-                console.error('解析错误:', error);
-            }
-        }
-        
-        // 开始扫描
-        startBtn.addEventListener('click', async () => {
-            try {
-                logDebug("开始启动摄像头扫描...");
-                
-                // 隐藏占位符，显示扫码器
-                scannerPlaceholder.style.display = 'none';
-                qrReader.style.display = 'block';
-                focusHint.style.display = 'block';
-                
-                // 初始化扫码器 - 优化配置
-                const config = {
-                    fps: 10,
-                    qrbox: { width: 250, height: 100 }, // 更适合条形码的长方形区域
-                    rememberLastUsedCamera: true,
-                    supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
-                    // 优化摄像头设置
-                    videoConstraints: {
-                        facingMode: { ideal: "environment" },
-                        focusMode: "continuous",
-                        width: { min: 640, ideal: 1280, max: 1920 },
-                        height: { min: 480, ideal: 720, max: 1080 }
-                    }
-                };
-                
-                logDebug("扫码器配置: " + JSON.stringify(config));
-                
-                html5QrcodeScanner = new Html5QrcodeScanner(
-                    "qr-reader", 
-                    config,
-                    false
-                );
-                
-                // 开始扫描
-                logDebug("开始渲染扫码器...");
-                html5QrcodeScanner.render(onScanSuccess, onScanFailure);
-                
-                // 更新UI状态
-                isScanning = true;
-                startBtn.disabled = true;
-                stopBtn.disabled = false;
-                
-                // 获取视频流用于调试
-                setTimeout(() => {
-                    const videoElement = document.querySelector("#qr-reader video");
-                    if (videoElement) {
-                        if (videoElement.srcObject) {
-                            currentStream = videoElement.srcObject;
-                            logDebug("摄像头已启动，分辨率: " + 
-                                videoElement.videoWidth + "x" + videoElement.videoHeight);
-                        }
-                        
-                        // 添加点击事件
-                        videoElement.addEventListener('click', function() {
-                            logDebug("点击了扫描区域");
-                            showStatus("尝试手动对焦...", "info");
-                        });
-                    }
-                }, 1500);
-                
-                showStatus('扫描已启动，请将条形码对准扫描框。确保光线充足，条形码清晰。', 'info');
-                
-            } catch (error) {
-                logDebug("启动扫描失败: " + error.message);
-                showStatus(`无法启动扫描: ${error.message}`, 'error');
-                console.error('扫码器错误:', error);
-                
-                // 恢复UI状态
-                scannerPlaceholder.style.display = 'flex';
-                qrReader.style.display = 'none';
-                focusHint.style.display = 'none';
-                startBtn.disabled = false;
-                stopBtn.disabled = true;
-            }
-        });
-        
-        // 停止扫描
-        stopBtn.addEventListener('click', () => {
-            logDebug("停止扫描...");
-            
-            if (html5QrcodeScanner) {
-                html5QrcodeScanner.clear().then(() => {
-                    logDebug("扫码器已停止");
-                }).catch(err => {
-                    logDebug("停止扫码器时出错: " + err.message);
-                    console.error("停止扫码器时出错:", err);
-                });
-                html5QrcodeScanner = null;
-            }
-            
-            // 停止视频流
-            if (currentStream) {
-                currentStream.getTracks().forEach(track => {
-                    logDebug("停止轨道: " + track.kind);
-                    track.stop();
-                });
-                currentStream = null;
-            }
-            
-            // 更新UI状态
-            qrReader.style.display = 'none';
-            scannerPlaceholder.style.display = 'flex';
-            focusHint.style.display = 'none';
-            isScanning = false;
-            startBtn.disabled = false;
-            stopBtn.disabled = true;
-            
-            showStatus('扫描已停止', 'info');
-        });
-        
-        // 扫描成功回调
-        function onScanSuccess(decodedText) {
-            logDebug("扫描成功! 解码内容: " + decodedText);
-            
-            // 验证扫描结果是否为有效的12位条形码
-            if (decodedText && decodedText.length === 12 && /^[A-Za-z0-9]+$/.test(decodedText)) {
-                // 停止扫描
-                if (html5QrcodeScanner) {
-                    html5QrcodeScanner.clear();
-                    html5QrcodeScanner = null;
-                }
-                
-                // 停止视频流
-                if (currentStream) {
-                    currentStream.getTracks().forEach(track => track.stop());
-                    currentStream = null;
-                }
-                
-                // 更新UI状态
-                qrReader.style.display = 'none';
-                scannerPlaceholder.style.display = 'flex';
-                focusHint.style.display = 'none';
-                isScanning = false;
-                startBtn.disabled = false;
-                stopBtn.disabled = true;
-                
-                // 处理扫描到的条形码
-                processBarcode(decodedText);
-            } else {
-                logDebug("扫描到的内容不符合条形码格式: " + decodedText);
-                showStatus("扫描到的内容不是有效的12位条形码，请重试", "error");
-            }
-        }
-        
-        // 扫描失败回调
-        function onScanFailure(error) {
-            // 只记录部分错误，避免日志过多
-            if (!error.toString().includes("NotFoundException")) {
-                logDebug("扫码失败: " + error.toString().substring(0, 100));
-            }
-        }
-        
-        // 手动提交
-        manualSubmit.addEventListener('click', () => {
-            const barcode = manualCode.value.trim().toUpperCase();
-            if (!barcode) {
-                showStatus('请输入条形码', 'error');
-                return;
-            }
-            
-            processBarcode(barcode);
-        });
-        
-        // 按Enter键提交手动输入
-        manualCode.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                manualSubmit.click();
-            }
-        });
-        
-        // 测试数据
-        testBtn.addEventListener('click', () => {
-            // 生成测试条形码：1A5 (32进制 = 1*32^2 + 10*32 + 5 = 1024 + 320 + 5 = 1349)
-            // 性别: M (男)
-            // 年龄: 25
-            // 年份: 23 (2023)
-            // 月份: 9 (16进制9 = 9月)
-            // 随访: 1 (16进制1 = 第1次)
-            // 扩展: 01
-            const testBarcode = '1A5M251229101';
-            manualCode.value = testBarcode;
-            processBarcode(testBarcode);
-        });
-        
-        // 调试模式
-        debugBtn.addEventListener('click', () => {
-            debugMode = !debugMode;
-            debugInfo.style.display = debugMode ? 'block' : 'none';
-            debugBtn.innerHTML = debugMode ? 
-                '<i class="fas fa-bug-slash"></i> 关闭调试' : 
-                '<i class="fas fa-bug"></i> 调试模式';
-            
-            logDebug(debugMode ? "调试模式已开启" : "调试模式已关闭");
-            showStatus(debugMode ? "调试模式已开启" : "调试模式已关闭", "info");
-        });
-        
-        // 清除历史记录
-        clearHistoryBtn.addEventListener('click', () => {
-            if (confirm('确定要清除所有扫描历史记录吗？')) {
-                scanHistory = [];
-                localStorage.removeItem('barcodeScanHistory');
-                updateHistoryDisplay();
-                showStatus('历史记录已清除', 'info');
-                logDebug("历史记录已清除");
-            }
-        });
-        
-        // 页面卸载时停止扫描
-        window.addEventListener('beforeunload', () => {
-            if (html5QrcodeScanner) {
-                html5QrcodeScanner.clear();
-                logDebug("页面卸载，停止扫码器");
-            }
-            if (currentStream) {
-                currentStream.getTracks().forEach(track => track.stop());
-            }
-        });
-        
-        // 添加键盘快捷键
-        document.addEventListener('keydown', (e) => {
-            // Ctrl+D 切换调试模式
-            if (e.ctrlKey && e.key === 'd') {
-                e.preventDefault();
-                debugBtn.click();
-            }
-            // Ctrl+S 开始扫描
-            else if (e.ctrlKey && e.key === 's') {
-                e.preventDefault();
-                if (!isScanning) {
-                    startBtn.click();
-                }
-            }
-            // Ctrl+E 停止扫描
-            else if (e.ctrlKey && e.key === 'e') {
-                e.preventDefault();
-                if (isScanning) {
-                    stopBtn.click();
-                }
-            }
-        });
-        
-        // 添加一些测试条形码用于调试
-        window.generateTestBarcode = function() {
-            const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-            let barcode = '';
-            
-            // 前3位：32进制
-            for (let i = 0; i < 3; i++) {
-                barcode += chars[Math.floor(Math.random() * 32)];
-            }
-            
-            // 第4位：性别
-            const genders = ['M', 'F', 'G'];
-            barcode += genders[Math.floor(Math.random() * 3)];
-            
-            // 第5-6位：年龄 (20-80)
-            barcode += (Math.floor(Math.random() * 61) + 20).toString().padStart(2, '0');
-            
-            // 第7-8位：年份 (22-24)
-            barcode += (Math.floor(Math.random() * 3) + 22).toString().padStart(2, '0');
-            
-            // 第9位：月份 (1-12的16进制)
-            const month = Math.floor(Math.random() * 12) + 1;
-            barcode += month.toString(16).toUpperCase();
-            
-            // 第10位：随访次数 (1-5的16进制)
-            const followUp = Math.floor(Math.random() * 5) + 1;
-            barcode += followUp.toString(16).toUpperCase();
-            
-            // 第11-12位：扩展位
-            barcode += '01';
-            
-            return barcode;
-        };
-        
-        // 添加一个快速测试按钮
-        const quickTestBtn = document.createElement('button');
-        quickTestBtn.className = 'btn btn-secondary';
-        quickTestBtn.innerHTML = '<i class="fas fa-bolt"></i> 快速测试';
-        quickTestBtn.style.marginTop = '10px';
-        quickTestBtn.onclick = function() {
-            const testCode = window.generateTestBarcode();
-            manualCode.value = testCode;
-            processBarcode(testCode);
-        };
-        document.querySelector('.manual-input').appendChild(quickTestBtn);
-    </script>
-</body>
-</html>
+                    <li><strong>第9位</strong>: 16进制
