@@ -87,7 +87,7 @@
             align-items: center;
             justify-content: center;
             margin-bottom: 20px;
-            background-color: #f8fafc;
+            background-color: #000;
             overflow: hidden;
         }
         
@@ -105,17 +105,40 @@
         
         #qr-reader__dashboard {
             padding: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
         }
         
         #qr-reader__camera_selection {
             width: 100%;
             margin-bottom: 10px;
+            padding: 8px;
+            border-radius: 4px;
+            background: #333;
+            color: white;
+            border: 1px solid #555;
+        }
+        
+        #qr-reader__dashboard_section_csr button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+            font-weight: bold;
+        }
+        
+        #qr-reader__dashboard_section_csr button:hover {
+            background: #2980b9;
         }
         
         .scanner-placeholder {
             text-align: center;
-            color: #7f8c8d;
+            color: white;
             z-index: 1;
+            padding: 20px;
         }
         
         .scanner-placeholder i {
@@ -172,6 +195,16 @@
         
         .btn-danger:hover {
             background-color: #c0392b;
+            transform: translateY(-2px);
+        }
+        
+        .btn-warning {
+            background-color: #f39c12;
+            color: white;
+        }
+        
+        .btn-warning:hover {
+            background-color: #d68910;
             transform: translateY(-2px);
         }
         
@@ -356,6 +389,18 @@
             font-weight: bold;
         }
         
+        .focus-hint {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            z-index: 10;
+        }
+        
         .footer {
             text-align: center;
             margin-top: 40px;
@@ -380,6 +425,9 @@
             <div id="status" class="status info">准备就绪，请开始扫描或手动输入条形码</div>
             
             <div class="scanner-container">
+                <div class="focus-hint" id="focus-hint" style="display: none;">
+                    <i class="fas fa-crosshairs"></i> 点击屏幕可手动对焦
+                </div>
                 <div class="scanner-placeholder" id="scanner-placeholder">
                     <i class="fas fa-barcode"></i>
                     <p>点击"开始扫描"按钮启动摄像头扫描条形码</p>
@@ -393,6 +441,9 @@
                 </button>
                 <button id="stop-btn" class="btn btn-danger" disabled>
                     <i class="fas fa-stop"></i> 停止扫描
+                </button>
+                <button id="focus-btn" class="btn btn-warning" disabled>
+                    <i class="fas fa-crosshairs"></i> 手动对焦
                 </button>
                 <button id="test-btn" class="btn btn-secondary">
                     <i class="fas fa-vial"></i> 测试数据
@@ -502,6 +553,7 @@
         // DOM元素
         const startBtn = document.getElementById('start-btn');
         const stopBtn = document.getElementById('stop-btn');
+        const focusBtn = document.getElementById('focus-btn');
         const testBtn = document.getElementById('test-btn');
         const manualSubmit = document.getElementById('manual-submit');
         const manualCode = document.getElementById('manual-code');
@@ -510,6 +562,7 @@
         const clearHistoryBtn = document.getElementById('clear-history');
         const historyList = document.getElementById('history-list');
         const qrReader = document.getElementById('qr-reader');
+        const focusHint = document.getElementById('focus-hint');
         
         // 结果元素
         const originalCodeEl = document.getElementById('original-code');
@@ -523,6 +576,7 @@
         // 状态变量
         let html5QrcodeScanner = null;
         let isScanning = false;
+        let currentStream = null;
         let scanHistory = JSON.parse(localStorage.getItem('barcodeScanHistory')) || [];
         
         // 初始化显示历史记录
@@ -722,6 +776,7 @@
                 // 隐藏占位符，显示扫码器
                 scannerPlaceholder.style.display = 'none';
                 qrReader.style.display = 'block';
+                focusHint.style.display = 'block';
                 
                 // 初始化扫码器
                 html5QrcodeScanner = new Html5QrcodeScanner(
@@ -730,7 +785,13 @@
                         fps: 10,
                         qrbox: { width: 250, height: 150 },
                         rememberLastUsedCamera: true,
-                        supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA]
+                        supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
+                        // 添加对焦配置
+                        videoConstraints: {
+                            facingMode: "environment",
+                            focusMode: "continuous", // 连续自动对焦
+                            advanced: [{ focusMode: "continuous" }]
+                        }
                     },
                     false
                 );
@@ -742,8 +803,21 @@
                 isScanning = true;
                 startBtn.disabled = true;
                 stopBtn.disabled = false;
+                focusBtn.disabled = false;
                 
-                showStatus('扫描已启动，请将条形码对准摄像头', 'info');
+                // 获取视频流用于手动对焦
+                setTimeout(() => {
+                    const videoElement = document.querySelector("#qr-reader video");
+                    if (videoElement && videoElement.srcObject) {
+                        currentStream = videoElement.srcObject;
+                        
+                        // 添加点击手动对焦功能
+                        videoElement.addEventListener('click', handleManualFocus);
+                        console.log("已添加手动对焦事件监听");
+                    }
+                }, 1000);
+                
+                showStatus('扫描已启动，请将条形码对准摄像头。点击屏幕可手动对焦。', 'info');
             } catch (error) {
                 showStatus(`无法启动扫描: ${error.message}`, 'error');
                 console.error('扫码器错误:', error);
@@ -751,8 +825,130 @@
                 // 恢复UI状态
                 scannerPlaceholder.style.display = 'flex';
                 qrReader.style.display = 'none';
+                focusHint.style.display = 'none';
                 startBtn.disabled = false;
                 stopBtn.disabled = true;
+                focusBtn.disabled = true;
+            }
+        });
+        
+        // 手动对焦处理函数
+        function handleManualFocus(event) {
+            if (!currentStream) return;
+            
+            const videoTrack = currentStream.getVideoTracks()[0];
+            if (!videoTrack) return;
+            
+            const capabilities = videoTrack.getCapabilities();
+            if (!capabilities.focusDistance) {
+                console.log("当前摄像头不支持手动对焦");
+                showStatus('当前摄像头不支持手动对焦', 'info');
+                return;
+            }
+            
+            // 计算点击位置
+            const videoElement = event.target;
+            const rect = videoElement.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            
+            // 在点击位置显示对焦指示
+            showFocusIndicator(x, y);
+            
+            // 尝试设置对焦
+            try {
+                const settings = videoTrack.getSettings();
+                const constraints = {
+                    advanced: [{
+                        focusMode: "manual",
+                        focusDistance: 0.5 // 中等对焦距离
+                    }]
+                };
+                
+                videoTrack.applyConstraints(constraints).then(() => {
+                    console.log("手动对焦成功");
+                    showStatus('手动对焦已应用', 'info');
+                    
+                    // 3秒后恢复自动对焦
+                    setTimeout(() => {
+                        videoTrack.applyConstraints({
+                            advanced: [{ focusMode: "continuous" }]
+                        });
+                    }, 3000);
+                }).catch(err => {
+                    console.error("手动对焦失败:", err);
+                });
+            } catch (error) {
+                console.error("手动对焦出错:", error);
+            }
+        }
+        
+        // 显示对焦指示器
+        function showFocusIndicator(x, y) {
+            // 移除已有的指示器
+            const existingIndicator = document.querySelector('.focus-indicator');
+            if (existingIndicator) {
+                existingIndicator.remove();
+            }
+            
+            // 创建新的指示器
+            const indicator = document.createElement('div');
+            indicator.className = 'focus-indicator';
+            indicator.style.position = 'absolute';
+            indicator.style.left = `${x - 25}px`;
+            indicator.style.top = `${y - 25}px`;
+            indicator.style.width = '50px';
+            indicator.style.height = '50px';
+            indicator.style.border = '3px solid #00ff00';
+            indicator.style.borderRadius = '50%';
+            indicator.style.boxShadow = '0 0 10px #00ff00';
+            indicator.style.zIndex = '100';
+            indicator.style.pointerEvents = 'none';
+            indicator.style.animation = 'pulse 1s ease-out';
+            
+            // 添加动画样式
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes pulse {
+                    0% { transform: scale(1); opacity: 1; }
+                    100% { transform: scale(1.5); opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+            
+            qrReader.appendChild(indicator);
+            
+            // 1秒后移除指示器
+            setTimeout(() => {
+                indicator.remove();
+                style.remove();
+            }, 1000);
+        }
+        
+        // 手动对焦按钮
+        focusBtn.addEventListener('click', () => {
+            if (!currentStream) {
+                showStatus('请先启动摄像头', 'error');
+                return;
+            }
+            
+            // 模拟点击屏幕中心进行对焦
+            const videoElement = document.querySelector("#qr-reader video");
+            if (videoElement) {
+                const rect = videoElement.getBoundingClientRect();
+                const x = rect.width / 2;
+                const y = rect.height / 2;
+                
+                // 创建点击事件
+                const clickEvent = new MouseEvent('click', {
+                    view: window,
+                    bubbles: true,
+                    cancelable: true,
+                    clientX: rect.left + x,
+                    clientY: rect.top + y
+                });
+                
+                videoElement.dispatchEvent(clickEvent);
             }
         });
         
@@ -767,12 +963,26 @@
                 html5QrcodeScanner = null;
             }
             
+            // 移除事件监听器
+            const videoElement = document.querySelector("#qr-reader video");
+            if (videoElement) {
+                videoElement.removeEventListener('click', handleManualFocus);
+            }
+            
+            // 停止视频流
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop());
+                currentStream = null;
+            }
+            
             // 更新UI状态
             qrReader.style.display = 'none';
             scannerPlaceholder.style.display = 'flex';
+            focusHint.style.display = 'none';
             isScanning = false;
             startBtn.disabled = false;
             stopBtn.disabled = true;
+            focusBtn.disabled = true;
             
             showStatus('扫描已停止', 'info');
         });
@@ -787,12 +997,26 @@
                 html5QrcodeScanner = null;
             }
             
+            // 移除事件监听器
+            const videoElement = document.querySelector("#qr-reader video");
+            if (videoElement) {
+                videoElement.removeEventListener('click', handleManualFocus);
+            }
+            
+            // 停止视频流
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop());
+                currentStream = null;
+            }
+            
             // 更新UI状态
             qrReader.style.display = 'none';
             scannerPlaceholder.style.display = 'flex';
+            focusHint.style.display = 'none';
             isScanning = false;
             startBtn.disabled = false;
             stopBtn.disabled = true;
+            focusBtn.disabled = true;
             
             // 处理扫描到的条形码
             processBarcode(decodedText);
@@ -850,6 +1074,9 @@
         window.addEventListener('beforeunload', () => {
             if (html5QrcodeScanner) {
                 html5QrcodeScanner.clear();
+            }
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop());
             }
         });
     </script>
