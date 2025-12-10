@@ -465,10 +465,6 @@
                     <div class="stat-title">其他性别</div>
                     <div class="stat-value" id="otherGenderCount">0</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-title">平均就诊次数</div>
-                    <div class="stat-value" id="avgVisitCount">0.0</div>
-                </div>
             </div>
             
             <!-- Code格式说明 -->
@@ -495,7 +491,7 @@
         </div>
         
         <footer>
-            <p>© 2025 临床数据录入系统 | Stardust3939</p>
+            <p>© 2023 临床数据录入系统 | 支持复诊记录，Code包含就诊次数信息</p>
         </footer>
     </div>
 
@@ -514,7 +510,6 @@
         const maleCountEl = document.getElementById('maleCount');
         const femaleCountEl = document.getElementById('femaleCount');
         const otherGenderCountEl = document.getElementById('otherGenderCount');
-        const avgVisitCountEl = document.getElementById('avgVisitCount');
         
         // 32进制字符集 (0-9, A-V, 排除I,O,U)
         const BASE32_CHARS = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
@@ -921,17 +916,6 @@
             const otherGenderCount = dataRows.filter(row => 
                 row.gender === '其他' || row.gender === '' || !row.gender
             ).length;
-            
-            // 计算平均就诊次数
-            let totalVisitCount = 0;
-            let visitCountData = dataRows.filter(row => row.visitCount !== undefined);
-            if (visitCountData.length > 0) {
-                totalVisitCount = visitCountData.reduce((sum, row) => sum + (row.visitCount || 0), 0);
-                const avgVisitCount = (totalVisitCount / visitCountData.length).toFixed(1);
-                avgVisitCountEl.textContent = avgVisitCount;
-            } else {
-                avgVisitCountEl.textContent = '0.0';
-            }
             
             maleCountEl.textContent = maleCount;
             femaleCountEl.textContent = femaleCount;
