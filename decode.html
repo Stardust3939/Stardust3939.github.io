@@ -2,91 +2,80 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>条形码扫码解析系统</title>
     <style>
+        /* 优化移动端样式 */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
         
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             line-height: 1.6;
             color: #333;
             background-color: #f5f7fa;
-            padding: 20px;
-            max-width: 1200px;
-            margin: 0 auto;
+            padding: 15px;
+            -webkit-font-smoothing: antialiased;
         }
         
         .header {
             text-align: center;
-            margin-bottom: 30px;
-            padding: 20px;
+            margin-bottom: 20px;
+            padding: 20px 15px;
             background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
             color: white;
-            border-radius: 10px;
+            border-radius: 12px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
         
         .header h1 {
-            font-size: 2.2rem;
-            margin-bottom: 10px;
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+            font-weight: 700;
         }
         
         .header p {
-            font-size: 1.1rem;
+            font-size: 1rem;
             opacity: 0.9;
         }
         
         .container {
             display: flex;
             flex-direction: column;
-            gap: 30px;
-        }
-        
-        @media (min-width: 768px) {
-            .container {
-                flex-direction: row;
-            }
-            
-            .scanner-section {
-                flex: 1;
-            }
-            
-            .result-section {
-                flex: 1;
-            }
+            gap: 20px;
         }
         
         .section {
             background: white;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
         }
         
         .section-title {
-            font-size: 1.5rem;
-            margin-bottom: 20px;
+            font-size: 1.3rem;
+            margin-bottom: 15px;
             padding-bottom: 10px;
             border-bottom: 2px solid #f0f0f0;
             color: #2c3e50;
+            font-weight: 600;
         }
         
         .scanner-container {
             position: relative;
             width: 100%;
-            height: 300px;
+            height: 250px;
             border: 2px dashed #3498db;
-            border-radius: 8px;
+            border-radius: 10px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             background-color: #000;
             overflow: hidden;
         }
@@ -97,20 +86,16 @@
             object-fit: cover;
         }
         
-        #canvas {
-            display: none;
-        }
-        
         .scanner-placeholder {
             text-align: center;
             color: white;
             z-index: 1;
-            padding: 20px;
+            padding: 15px;
         }
         
         .scanner-placeholder i {
-            font-size: 3rem;
-            margin-bottom: 15px;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
             color: #3498db;
         }
         
@@ -126,89 +111,88 @@
         }
         
         .scan-line {
-            width: 80%;
-            height: 2px;
+            width: 90%;
+            height: 3px;
             background-color: #00ff00;
             position: absolute;
-            box-shadow: 0 0 10px #00ff00;
-            animation: scan 2s linear infinite;
+            box-shadow: 0 0 15px #00ff00;
+            animation: scan 2s ease-in-out infinite;
         }
         
         @keyframes scan {
-            0% { top: 10%; }
-            50% { top: 90%; }
-            100% { top: 10%; }
+            0% { top: 15%; }
+            50% { top: 85%; }
+            100% { top: 15%; }
         }
         
         .controls {
             display: flex;
-            gap: 15px;
-            margin-top: 15px;
             flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
         }
         
         .btn {
-            padding: 12px 24px;
+            padding: 14px 20px;
             border: none;
-            border-radius: 6px;
+            border-radius: 8px;
             font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
+            flex: 1;
+            min-width: 120px;
+        }
+        
+        .btn:active {
+            transform: scale(0.98);
         }
         
         .btn-primary {
-            background-color: #3498db;
+            background-color: #007AFF;
             color: white;
         }
         
-        .btn-primary:hover {
-            background-color: #2980b9;
-            transform: translateY(-2px);
+        .btn-primary:active {
+            background-color: #0056CC;
         }
         
         .btn-secondary {
-            background-color: #2ecc71;
+            background-color: #34C759;
             color: white;
         }
         
-        .btn-secondary:hover {
-            background-color: #27ae60;
-            transform: translateY(-2px);
+        .btn-secondary:active {
+            background-color: #2A9C46;
         }
         
         .btn-danger {
-            background-color: #e74c3c;
+            background-color: #FF3B30;
             color: white;
         }
         
-        .btn-danger:hover {
-            background-color: #c0392b;
-            transform: translateY(-2px);
+        .btn-danger:active {
+            background-color: #D70015;
         }
         
         .btn-warning {
-            background-color: #f39c12;
+            background-color: #FF9500;
             color: white;
         }
         
-        .btn-warning:hover {
-            background-color: #d68910;
-            transform: translateY(-2px);
+        .btn-warning:active {
+            background-color: #CC7700;
         }
         
         .btn:disabled {
-            background-color: #bdc3c7;
+            background-color: #C7C7CC;
+            color: #8E8E93;
             cursor: not-allowed;
             transform: none;
-        }
-        
-        .manual-input {
-            margin-top: 20px;
         }
         
         .input-group {
@@ -224,308 +208,126 @@
         
         .input-group input {
             width: 100%;
-            padding: 12px 15px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 1rem;
-            transition: border 0.3s;
+            padding: 15px;
+            border: 2px solid #E5E5EA;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            transition: border 0.2s;
+            -webkit-appearance: none;
         }
         
         .input-group input:focus {
-            border-color: #3498db;
+            border-color: #007AFF;
             outline: none;
-            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
         }
         
-        .result-display {
-            background-color: #f8f9fa;
-            border-radius: 8px;
-            padding: 20px;
-            margin-top: 10px;
-        }
-        
-        .code-breakdown {
-            margin-top: 25px;
-        }
-        
-        .breakdown-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 15px;
-            margin-top: 15px;
-        }
-        
-        @media (min-width: 768px) {
-            .breakdown-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-        }
-        
-        .breakdown-item {
-            background-color: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            border-left: 4px solid #3498db;
-        }
-        
-        .breakdown-item h4 {
-            font-size: 1rem;
-            margin-bottom: 8px;
-            color: #2c3e50;
-        }
-        
-        .breakdown-item p {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: #3498db;
-        }
-        
-        .breakdown-item .description {
-            font-size: 0.9rem;
-            font-weight: normal;
-            color: #7f8c8d;
-            margin-top: 5px;
-        }
-        
-        .history-section {
-            margin-top: 30px;
-        }
-        
+        /* 优化移动端历史记录 */
         .history-list {
             max-height: 200px;
             overflow-y: auto;
             margin-top: 15px;
-            border: 1px solid #eee;
-            border-radius: 6px;
+            border: 1px solid #E5E5EA;
+            border-radius: 10px;
+            -webkit-overflow-scrolling: touch;
         }
         
         .history-item {
-            padding: 12px 15px;
-            border-bottom: 1px solid #eee;
+            padding: 15px;
+            border-bottom: 1px solid #E5E5EA;
             display: flex;
             justify-content: space-between;
             align-items: center;
             cursor: pointer;
         }
         
-        .history-item:hover {
-            background-color: #f5f5f5;
+        .history-item:active {
+            background-color: #F2F2F7;
         }
         
         .history-item:last-child {
             border-bottom: none;
         }
         
-        .history-code {
-            font-family: monospace;
-            font-weight: bold;
+        /* 兼容性提示 */
+        .compatibility-info {
+            background-color: #FFF3CD;
+            border: 1px solid #FFEAA7;
+            color: #856404;
+            padding: 12px 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            font-size: 0.9rem;
         }
         
-        .history-time {
-            font-size: 0.85rem;
-            color: #7f8c8d;
-        }
-        
-        .status {
-            padding: 10px 15px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-            font-weight: 600;
-        }
-        
-        .status.success {
-            background-color: #d5edda;
+        .compatibility-info.success {
+            background-color: #D4EDDA;
+            border-color: #C3E6CB;
             color: #155724;
-            border: 1px solid #c3e6cb;
         }
         
-        .status.error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
+        .compatibility-info.warning {
+            background-color: #FFF3CD;
+            border-color: #FFEAA7;
+            color: #856404;
         }
         
-        .status.info {
-            background-color: #d1ecf1;
-            color: #0c5460;
-            border: 1px solid #bee5eb;
+        /* Safari特定优化 */
+        @supports (-webkit-touch-callout: none) {
+            .scanner-container {
+                height: 280px;
+            }
+            
+            .btn {
+                padding: 16px 20px;
+            }
+            
+            .input-group input {
+                font-size: 16px; /* 防止iOS自动缩放 */
+            }
         }
         
-        .legend {
-            background-color: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 20px;
-            font-size: 0.9rem;
-        }
-        
-        .legend h4 {
-            margin-bottom: 10px;
-            color: #2c3e50;
-        }
-        
-        .legend ul {
-            padding-left: 20px;
-        }
-        
-        .legend li {
-            margin-bottom: 5px;
-        }
-        
-        .gender-m {
-            color: #3498db;
-            font-weight: bold;
-        }
-        
-        .gender-f {
-            color: #e84393;
-            font-weight: bold;
-        }
-        
-        .gender-g {
-            color: #9b59b6;
-            font-weight: bold;
-        }
-        
-        .debug-info {
-            background-color: #2c3e50;
-            color: white;
-            padding: 10px;
-            border-radius: 5px;
-            margin-top: 10px;
-            font-size: 0.85rem;
-            font-family: monospace;
-            max-height: 100px;
-            overflow-y: auto;
-        }
-        
-        .footer {
-            text-align: center;
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #eee;
-            color: #7f8c8d;
-            font-size: 0.9rem;
-        }
-        
-        .scanner-help {
-            background-color: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 10px;
-            font-size: 0.9rem;
-            color: #666;
-        }
-        
-        .scan-frame {
-            position: absolute;
-            width: 80%;
-            height: 100px;
-            border: 2px solid #3498db;
-            box-shadow: 0 0 20px rgba(52, 152, 219, 0.5);
-            pointer-events: none;
-        }
-        
-        .base32-info {
-            background-color: #e8f4fc;
-            padding: 10px;
-            border-radius: 5px;
-            margin-top: 10px;
-            font-size: 0.85rem;
-            border-left: 4px solid #3498db;
-        }
-        
-        .barcode-type-selector {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
-        }
-        
-        .barcode-type-btn {
-            padding: 8px 16px;
-            border: 2px solid #ddd;
-            border-radius: 4px;
-            background: white;
-            cursor: pointer;
-            font-weight: 600;
-        }
-        
-        .barcode-type-btn.active {
-            border-color: #3498db;
-            background-color: #3498db;
-            color: white;
-        }
-        
-        .barcode-type-btn:hover:not(.active) {
-            border-color: #3498db;
+        /* 底部安全区域 */
+        .safe-area-bottom {
+            padding-bottom: env(safe-area-inset-bottom);
         }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- 引入条形码解码库 -->
-    <script src="https://unpkg.com/@sec-ant/barcode-detector@0.0.6/dist/barcode-detector.umd.js"></script>
 </head>
 <body>
     <div class="header">
         <h1><i class="fas fa-barcode"></i> 条形码扫码解析系统</h1>
-        <p>支持Code128和Code39条形码扫描，自动解析12位编码含义</p>
+        <p>专为移动端优化的条形码扫描解析工具</p>
     </div>
     
     <div class="container">
-        <div class="scanner-section section">
+        <div class="section">
             <h2 class="section-title"><i class="fas fa-camera"></i> 扫码区域</h2>
             
-            <div id="status" class="status info">准备就绪，请选择条形码类型并开始扫描</div>
-            
-            <div class="barcode-type-selector">
-                <button class="barcode-type-btn active" data-type="code_128">
-                    <i class="fas fa-barcode"></i> Code128
-                </button>
-                <button class="barcode-type-btn" data-type="code_39">
-                    <i class="fas fa-barcode"></i> Code39
-                </button>
+            <div id="status" class="compatibility-info">
+                <i class="fas fa-info-circle"></i> 正在检测设备兼容性...
             </div>
             
             <div class="scanner-container">
                 <div class="scanner-placeholder" id="scanner-placeholder">
                     <i class="fas fa-barcode"></i>
-                    <p>点击"开始扫描"按钮启动摄像头扫描条形码</p>
+                    <p>点击"开始扫描"启动摄像头</p>
                 </div>
                 <div class="scanner-overlay" style="display: none;" id="scanner-overlay">
-                    <div class="scan-frame"></div>
                     <div class="scan-line"></div>
                 </div>
                 <video id="video" autoplay playsinline style="display: none;"></video>
-                <canvas id="canvas" style="display: none;"></canvas>
-            </div>
-            
-            <div class="scanner-help">
-                <p><strong>扫描技巧：</strong></p>
-                <ul>
-                    <li>确保条形码在扫描框内</li>
-                    <li>保持条形码清晰对焦</li>
-                    <li>确保光线充足</li>
-                    <li>条形码与摄像头平行，避免倾斜</li>
-                    <li>如果无法扫描，请尝试手动输入</li>
-                </ul>
-            </div>
-            
-            <div class="base32-info">
-                <strong>注意：</strong>分子号使用自定义32进制编码，字符集为：0-9, A-H, J-N, P-T, V-Z (共32个字符，不含I、O、U易混淆字母)
             </div>
             
             <div class="controls">
                 <button id="start-btn" class="btn btn-primary">
-                    <i class="fas fa-play"></i> 开始扫描
+                    <i class="fas fa-camera"></i> 开始扫描
                 </button>
                 <button id="stop-btn" class="btn btn-danger" disabled>
-                    <i class="fas fa-stop"></i> 停止扫描
+                    <i class="fas fa-stop"></i> 停止
                 </button>
-                <button id="test-btn" class="btn btn-secondary">
-                    <i class="fas fa-vial"></i> 测试数据
-                </button>
-                <button id="debug-btn" class="btn btn-warning">
-                    <i class="fas fa-bug"></i> 调试模式
+                <button id="upload-btn" class="btn btn-secondary">
+                    <i class="fas fa-upload"></i> 上传图片
                 </button>
             </div>
             
@@ -533,29 +335,23 @@
                 <h3><i class="fas fa-keyboard"></i> 手动输入</h3>
                 <div class="input-group">
                     <label for="manual-code">输入12位条形码：</label>
-                    <input type="text" id="manual-code" maxlength="12" placeholder="例如：1A5M251229101">
-                    <button id="manual-submit" class="btn btn-primary" style="margin-top: 10px; width: 100%;">
+                    <input type="text" id="manual-code" maxlength="12" placeholder="例如：1A5M251229101" inputmode="text">
+                    <button id="manual-submit" class="btn btn-primary" style="margin-top: 10px;">
                         <i class="fas fa-check"></i> 解析条形码
                     </button>
                 </div>
-                <button id="quick-test-btn" class="btn btn-secondary" style="margin-top: 10px; width: 100%;">
-                    <i class="fas fa-bolt"></i> 快速测试
-                </button>
             </div>
             
-            <div id="debug-info" class="debug-info" style="display: none;">
-                <p>调试信息：</p>
-                <div id="debug-log"></div>
-            </div>
+            <div id="compatibility-details" style="margin-top: 15px;"></div>
         </div>
         
-        <div class="result-section section">
+        <div class="section">
             <h2 class="section-title"><i class="fas fa-search"></i> 解析结果</h2>
             
             <div class="input-group">
                 <label>原始条形码：</label>
                 <div class="result-display">
-                    <span id="original-code" style="font-family: monospace; font-size: 1.2rem; font-weight: bold;">等待扫描...</span>
+                    <span id="original-code" style="font-family: 'Menlo', monospace; font-size: 1.2rem; font-weight: bold;">等待输入...</span>
                 </div>
             </div>
             
@@ -565,96 +361,75 @@
                     <div class="breakdown-item">
                         <h4>分子号 (前3位)</h4>
                         <p id="molecular-id">-</p>
-                        <div class="description">32进制转换为10进制，前面加"K"</div>
+                        <div class="description">32进制转10进制，加"K"</div>
                     </div>
-                    
                     <div class="breakdown-item">
                         <h4>性别 (第4位)</h4>
                         <p id="gender">-</p>
                         <div class="description">M=男, F=女, G=其他</div>
                     </div>
-                    
                     <div class="breakdown-item">
-                        <h4>年龄 (第5-6位)</h4>
+                        <h4>年龄 (5-6位)</h4>
                         <p id="age">-</p>
                         <div class="description">10进制年龄</div>
                     </div>
-                    
                     <div class="breakdown-item">
-                        <h4>收集年份 (第7-8位)</h4>
+                        <h4>年份 (7-8位)</h4>
                         <p id="year">-</p>
-                        <div class="description">后两位年份，前面加"20"</div>
+                        <div class="description">20XX年</div>
                     </div>
-                    
                     <div class="breakdown-item">
-                        <h4>收集月份 (第9位)</h4>
+                        <h4>月份 (第9位)</h4>
                         <p id="month">-</p>
                         <div class="description">16进制月份</div>
                     </div>
-                    
                     <div class="breakdown-item">
-                        <h4>随访次数 (第10位)</h4>
+                        <h4>随访 (第10位)</h4>
                         <p id="follow-up">-</p>
                         <div class="description">16进制随访次数</div>
                     </div>
                 </div>
             </div>
-            
-            <div class="legend">
-                <h4><i class="fas fa-info-circle"></i> 条形码格式说明</h4>
-                <ul>
-                    <li><strong>前3位</strong>: 32进制的分子号，转换为10进制后前面加"K"<br>
-                        <small>字符集: 0-9, A-H, J-N, P-T, V-Z (不含I,O,U)</small>
-                    </li>
-                    <li><strong>第4位</strong>: 性别 (M=男, F=女, G=其他)</li>
-                    <li><strong>第5-6位</strong>: 10进制年龄</li>
-                    <li><strong>第7-8位</strong>: 收集年份后两位 (完整年份为20XX)</li>
-                    <li><strong>第9位</strong>: 16进制月份 (1-9,A,B,C)</li>
-                    <li><strong>第10位</strong>: 16进制随访次数</li>
-                    <li><strong>第11-12位</strong>: 扩展位 (v1版本忽略)</li>
-                </ul>
+        </div>
+        
+        <div class="section">
+            <h2 class="section-title"><i class="fas fa-history"></i> 扫描历史</h2>
+            <div class="history-list" id="history-list">
+                <div class="history-item">
+                    <span class="history-code">暂无记录</span>
+                    <span class="history-time"></span>
+                </div>
             </div>
+            <button id="clear-history" class="btn btn-danger" style="margin-top: 15px; width: 100%;">
+                <i class="fas fa-trash"></i> 清除历史
+            </button>
         </div>
     </div>
     
-    <div class="history-section section">
-        <h2 class="section-title"><i class="fas fa-history"></i> 扫描历史</h2>
-        <div class="history-list" id="history-list">
-            <!-- 历史记录会动态添加到这里 -->
-            <div class="history-item">
-                <span class="history-code">暂无扫描记录</span>
-                <span class="history-time"></span>
-            </div>
-        </div>
-        <button id="clear-history" class="btn btn-danger" style="margin-top: 15px;">
-            <i class="fas fa-trash"></i> 清除历史
-        </button>
+    <div class="footer safe-area-bottom">
+        <p style="text-align: center; color: #8E8E93; font-size: 0.85rem; padding: 20px 0;">
+            条形码解析系统 v1.0 | 专为iOS优化
+        </p>
     </div>
-    
-    <div class="footer">
-        <p>条形码解析系统 v1.0 | 设计用于医疗样本数据采集</p>
-        <p>支持Code128和Code39条形码扫描</p>
-    </div>
+
+    <!-- 隐藏的文件上传输入 -->
+    <input type="file" id="file-input" accept="image/*" capture="environment" style="display: none;">
 
     <script>
         // DOM元素
         const startBtn = document.getElementById('start-btn');
         const stopBtn = document.getElementById('stop-btn');
-        const testBtn = document.getElementById('test-btn');
-        const debugBtn = document.getElementById('debug-btn');
+        const uploadBtn = document.getElementById('upload-btn');
         const manualSubmit = document.getElementById('manual-submit');
         const manualCode = document.getElementById('manual-code');
-        const quickTestBtn = document.getElementById('quick-test-btn');
+        const fileInput = document.getElementById('file-input');
         const statusDiv = document.getElementById('status');
         const scannerPlaceholder = document.getElementById('scanner-placeholder');
         const scannerOverlay = document.getElementById('scanner-overlay');
         const clearHistoryBtn = document.getElementById('clear-history');
         const historyList = document.getElementById('history-list');
         const video = document.getElementById('video');
-        const canvas = document.getElementById('canvas');
-        const debugInfo = document.getElementById('debug-info');
-        const debugLog = document.getElementById('debug-log');
-        const barcodeTypeBtns = document.querySelectorAll('.barcode-type-btn');
+        const compatibilityDetails = document.getElementById('compatibility-details');
         
         // 结果元素
         const originalCodeEl = document.getElementById('original-code');
@@ -667,108 +442,121 @@
         
         // 状态变量
         let isScanning = false;
-        let debugMode = false;
-        let scanHistory = JSON.parse(localStorage.getItem('barcodeScanHistory')) || [];
         let stream = null;
         let barcodeDetector = null;
-        let currentBarcodeType = 'code_128'; // 默认使用Code128
-        let animationFrameId = null;
+        let scanInterval = null;
+        let scanHistory = JSON.parse(localStorage.getItem('barcodeScanHistory')) || [];
         
         // 自定义32进制字符集（不含I、O、U）
         const CUSTOM_BASE32_CHARS = '0123456789ABCDEFGHJKLMNPQRSTVWXYZ';
         
-        // 初始化显示历史记录
-        updateHistoryDisplay();
+        // 检查iOS版本
+        function getIOSVersion() {
+            const userAgent = navigator.userAgent;
+            const match = userAgent.match(/OS (\d+)_(\d+)_?(\d+)?/);
+            if (match) {
+                return {
+                    major: parseInt(match[1]),
+                    minor: parseInt(match[2]),
+                    patch: match[3] ? parseInt(match[3]) : 0
+                };
+            }
+            return null;
+        }
+        
+        // 检查兼容性
+        function checkCompatibility() {
+            const iosVersion = getIOSVersion();
+            let compatibilityHTML = '<div style="margin-top: 10px;">';
+            
+            // 检查HTTPS
+            if (window.location.protocol !== 'https:') {
+                statusDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> 请使用HTTPS访问以获得完整功能';
+                statusDiv.className = 'compatibility-info warning';
+                compatibilityHTML += '<p><i class="fas fa-exclamation-circle"></i> 当前非HTTPS连接，部分功能受限</p>';
+            }
+            
+            // 检查iOS版本
+            if (iosVersion) {
+                compatibilityHTML += `<p><i class="fas fa-mobile-alt"></i> iOS ${iosVersion.major}.${iosVersion.minor}.${iosVersion.patch}</p>`;
+                
+                // iOS 16+ 支持BarcodeDetector
+                if (iosVersion.major >= 16) {
+                    compatibilityHTML += '<p><i class="fas fa-check-circle"></i> 支持原生条形码扫描</p>';
+                } else {
+                    compatibilityHTML += '<p><i class="fas fa-info-circle"></i> iOS 16以下版本建议使用上传图片功能</p>';
+                }
+                
+                // 摄像头支持
+                if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                    compatibilityHTML += '<p><i class="fas fa-check-circle"></i> 支持摄像头访问</p>';
+                }
+            } else {
+                compatibilityHTML += '<p><i class="fas fa-info-circle"></i> 非iOS设备</p>';
+            }
+            
+            // 检查BarcodeDetector
+            if ('BarcodeDetector' in window) {
+                compatibilityHTML += '<p><i class="fas fa-check-circle"></i> 支持BarcodeDetector API</p>';
+                statusDiv.innerHTML = '<i class="fas fa-check-circle"></i> 设备兼容性良好，支持扫码功能';
+                statusDiv.className = 'compatibility-info success';
+            } else {
+                compatibilityHTML += '<p><i class="fas fa-info-circle"></i> 不支持原生扫码，可使用上传图片</p>';
+                statusDiv.innerHTML = '<i class="fas fa-info-circle"></i> 使用上传图片功能进行条形码识别';
+                statusDiv.className = 'compatibility-info warning';
+            }
+            
+            compatibilityHTML += '</div>';
+            compatibilityDetails.innerHTML = compatibilityHTML;
+        }
         
         // 初始化BarcodeDetector
         function initBarcodeDetector() {
-            try {
-                // 检查浏览器是否原生支持BarcodeDetector API
-                if ('BarcodeDetector' in window) {
+            if ('BarcodeDetector' in window) {
+                try {
                     barcodeDetector = new BarcodeDetector({ 
-                        formats: [currentBarcodeType] 
+                        formats: ['code_128', 'code_39', 'qr_code'] 
                     });
-                    logDebug(`使用原生BarcodeDetector API (${currentBarcodeType})`);
+                    console.log('BarcodeDetector初始化成功');
                     return true;
-                } 
-                // 检查是否加载了polyfill
-                else if (window.BarcodeDetectorPolyfill) {
-                    barcodeDetector = new window.BarcodeDetectorPolyfill({ 
-                        formats: [currentBarcodeType] 
-                    });
-                    logDebug(`使用polyfill BarcodeDetector (${currentBarcodeType})`);
-                    return true;
-                } else {
-                    logDebug("未检测到BarcodeDetector支持，将使用备用方案");
+                } catch (error) {
+                    console.warn('BarcodeDetector初始化失败:', error);
                     return false;
                 }
+            }
+            return false;
+        }
+        
+        // 从图片中检测条形码
+        async function detectBarcodeFromImage(imageBitmap) {
+            if (!barcodeDetector) return null;
+            
+            try {
+                const barcodes = await barcodeDetector.detect(imageBitmap);
+                if (barcodes.length > 0) {
+                    return barcodes[0].rawValue;
+                }
             } catch (error) {
-                logDebug("初始化BarcodeDetector失败: " + error.message);
-                return false;
+                console.error('条形码检测失败:', error);
             }
+            return null;
         }
         
-        // 工具函数：显示调试信息
-        function logDebug(message) {
-            if (!debugMode) return;
-            
-            const timestamp = new Date().toLocaleTimeString();
-            const logEntry = document.createElement('div');
-            logEntry.textContent = `[${timestamp}] ${message}`;
-            debugLog.appendChild(logEntry);
-            
-            // 保持日志长度
-            if (debugLog.children.length > 10) {
-                debugLog.removeChild(debugLog.firstChild);
-            }
-            
-            debugLog.scrollTop = debugLog.scrollHeight;
-        }
-        
-        // 工具函数：显示状态消息
-        function showStatus(message, type = 'info') {
-            statusDiv.textContent = message;
-            statusDiv.className = 'status ' + type;
-            statusDiv.style.display = 'block';
-            
-            logDebug(`状态: ${message}`);
-            
-            // 3秒后自动隐藏信息类消息
-            if (type === 'info') {
-                setTimeout(() => {
-                    statusDiv.style.display = 'none';
-                }, 3000);
-            }
-        }
-        
-        // 工具函数：自定义32进制转10进制（不含I、O、U）
+        // 32进制转换
         function fromCustomBase32(str) {
             let result = 0;
-            
             for (let i = 0; i < str.length; i++) {
                 const char = str[i].toUpperCase();
                 const value = CUSTOM_BASE32_CHARS.indexOf(char);
                 if (value === -1) {
-                    // 尝试处理可能输入了I、O、U的情况
-                    let mappedChar = char;
-                    if (char === 'I') mappedChar = '1';
-                    else if (char === 'O') mappedChar = '0';
-                    else if (char === 'U') mappedChar = 'V';
-                    
-                    const mappedValue = CUSTOM_BASE32_CHARS.indexOf(mappedChar);
-                    if (mappedValue === -1) {
-                        throw new Error(`无效的32进制字符: ${char}。允许的字符: ${CUSTOM_BASE32_CHARS}`);
-                    }
-                    result = result * 32 + mappedValue;
-                } else {
-                    result = result * 32 + value;
+                    throw new Error(`无效的32进制字符: ${char}`);
                 }
+                result = result * 32 + value;
             }
-            
             return result;
         }
         
-        // 工具函数：验证32进制字符串
+        // 验证32进制
         function isValidCustomBase32(str) {
             for (let i = 0; i < str.length; i++) {
                 const char = str[i].toUpperCase();
@@ -779,61 +567,48 @@
             return true;
         }
         
-        // 工具函数：解析条形码
+        // 解析条形码
         function parseBarcode(barcode) {
-            logDebug(`开始解析条形码: ${barcode}`);
-            
-            // 验证条形码长度
             if (barcode.length !== 12) {
                 throw new Error(`条形码长度必须为12位，当前为${barcode.length}位`);
             }
             
-            // 验证字符（字母数字）
             if (!/^[A-Za-z0-9]+$/.test(barcode)) {
                 throw new Error('条形码只能包含字母和数字');
             }
             
-            // 分解条形码
-            const molecularCode = barcode.substring(0, 3); // 前3位
-            const genderCode = barcode[3]; // 第4位
-            const ageCode = barcode.substring(4, 6); // 第5-6位
-            const yearCode = barcode.substring(6, 8); // 第7-8位
-            const monthCode = barcode[8]; // 第9位
-            const followUpCode = barcode[9]; // 第10位
-            const extensionCode = barcode.substring(10, 12); // 第11-12位（扩展位）
+            const molecularCode = barcode.substring(0, 3);
+            const genderCode = barcode[3];
+            const ageCode = barcode.substring(4, 6);
+            const yearCode = barcode.substring(6, 8);
+            const monthCode = barcode[8];
+            const followUpCode = barcode[9];
             
-            // 验证分子号（自定义32进制）
             if (!isValidCustomBase32(molecularCode)) {
-                throw new Error(`无效的分子号: ${molecularCode}。必须使用32进制字符集: ${CUSTOM_BASE32_CHARS}`);
+                throw new Error(`无效的分子号: ${molecularCode}`);
             }
             
-            // 验证性别代码
             const genderUpper = genderCode.toUpperCase();
             if (!['M', 'F', 'G'].includes(genderUpper)) {
-                throw new Error(`无效的性别代码: ${genderCode}，应为 M、F 或 G`);
+                throw new Error(`无效的性别代码: ${genderCode}`);
             }
             
-            // 验证年龄（应为数字）
             if (!/^\d{2}$/.test(ageCode)) {
-                throw new Error(`无效的年龄代码: ${ageCode}，应为2位数字`);
+                throw new Error(`无效的年龄代码: ${ageCode}`);
             }
             
-            // 验证年份（应为数字）
             if (!/^\d{2}$/.test(yearCode)) {
-                throw new Error(`无效的年份代码: ${yearCode}，应为2位数字`);
+                throw new Error(`无效的年份代码: ${yearCode}`);
             }
             
-            // 验证月份（16进制）
             if (!/^[0-9A-Fa-f]$/.test(monthCode)) {
-                throw new Error(`无效的月份代码: ${monthCode}，应为16进制数字(0-9,A-F)`);
+                throw new Error(`无效的月份代码: ${monthCode}`);
             }
             
-            // 验证随访次数（16进制）
             if (!/^[0-9A-Fa-f]$/.test(followUpCode)) {
-                throw new Error(`无效的随访次数代码: ${followUpCode}，应为16进制数字(0-9,A-F)`);
+                throw new Error(`无效的随访次数代码: ${followUpCode}`);
             }
             
-            // 解析各部分
             const molecularId = fromCustomBase32(molecularCode);
             const gender = genderUpper;
             const age = parseInt(ageCode, 10);
@@ -841,29 +616,17 @@
             const month = parseInt(monthCode, 16);
             const followUp = parseInt(followUpCode, 16);
             
-            // 验证月份范围
-            if (isNaN(month) || month < 1 || month > 12) {
-                throw new Error(`月份超出范围: ${monthCode}，应为1-12的16进制表示`);
+            if (month < 1 || month > 12) {
+                throw new Error(`月份超出范围: ${month}`);
             }
             
-            // 验证年龄范围
             if (age < 0 || age > 120) {
-                throw new Error(`年龄超出范围: ${age}，应为0-120`);
+                throw new Error(`年龄超出范围: ${age}`);
             }
             
-            // 验证年份范围
             if (year < 2000 || year > 2099) {
-                throw new Error(`年份超出范围: ${year}，应为2000-2099`);
+                throw new Error(`年份超出范围: ${year}`);
             }
-            
-            logDebug(`解析成功:
-                分子号: ${molecularCode} -> K${molecularId}
-                性别: ${gender}
-                年龄: ${age}
-                年份: ${year}
-                月份: ${month}
-                随访: ${followUp}
-            `);
             
             return {
                 original: barcode,
@@ -872,20 +635,18 @@
                 age: age,
                 year: year,
                 month: month,
-                followUp: followUp,
-                extension: extensionCode,
-                molecularCode: molecularCode
+                followUp: followUp
             };
         }
         
-        // 工具函数：显示解析结果
+        // 显示结果
         function displayResult(result) {
             originalCodeEl.textContent = result.original;
-            molecularIdEl.innerHTML = `${result.molecular}<br><small>(${result.molecularCode}<sub>32</sub> = ${result.molecular.substring(1)}<sub>10</sub>)</small>`;
+            molecularIdEl.textContent = result.molecular;
             
-            // 根据性别设置不同颜色
             genderEl.innerHTML = result.gender;
-            genderEl.className = `gender-${result.gender.toLowerCase()}`;
+            genderEl.className = result.gender === 'M' ? 'gender-m' : 
+                               result.gender === 'F' ? 'gender-f' : 'gender-g';
             
             ageEl.textContent = result.age;
             yearEl.textContent = result.year;
@@ -893,39 +654,27 @@
             followUpEl.textContent = `${result.followUp} (0x${result.followUp.toString(16).toUpperCase()})`;
             
             showStatus(`成功解析条形码: ${result.original}`, 'success');
-            logDebug(`显示解析结果: ${result.original}`);
         }
         
-        // 工具函数：添加到历史记录
-        function addToHistory(barcode, result) {
-            const timestamp = new Date().toLocaleString('zh-CN');
-            const historyItem = {
-                barcode: barcode,
-                timestamp: timestamp,
-                result: result
-            };
+        // 显示状态
+        function showStatus(message, type = 'info') {
+            statusDiv.innerHTML = `<i class="fas fa-info-circle"></i> ${message}`;
+            statusDiv.className = `compatibility-info ${type}`;
+            statusDiv.style.display = 'block';
             
-            // 添加到历史记录数组开头
-            scanHistory.unshift(historyItem);
-            
-            // 限制历史记录数量
-            if (scanHistory.length > 20) {
-                scanHistory = scanHistory.slice(0, 20);
+            if (type === 'info') {
+                setTimeout(() => {
+                    statusDiv.style.display = 'none';
+                }, 3000);
             }
-            
-            // 保存到本地存储
-            localStorage.setItem('barcodeScanHistory', JSON.stringify(scanHistory));
-            
-            // 更新显示
-            updateHistoryDisplay();
         }
         
-        // 工具函数：更新历史记录显示
+        // 更新历史记录
         function updateHistoryDisplay() {
             if (scanHistory.length === 0) {
                 historyList.innerHTML = `
                     <div class="history-item">
-                        <span class="history-code">暂无扫描记录</span>
+                        <span class="history-code">暂无记录</span>
                         <span class="history-time"></span>
                     </div>
                 `;
@@ -933,7 +682,6 @@
             }
             
             historyList.innerHTML = '';
-            
             scanHistory.forEach(item => {
                 const historyItem = document.createElement('div');
                 historyItem.className = 'history-item';
@@ -941,13 +689,10 @@
                     <span class="history-code">${item.barcode}</span>
                     <span class="history-time">${item.timestamp}</span>
                 `;
-                
-                // 点击历史记录项可以重新解析
                 historyItem.addEventListener('click', () => {
                     manualCode.value = item.barcode;
                     processBarcode(item.barcode);
                 });
-                
                 historyList.appendChild(historyItem);
             });
         }
@@ -957,45 +702,30 @@
             try {
                 const result = parseBarcode(barcode);
                 displayResult(result);
-                addToHistory(barcode, result);
+                
+                // 添加到历史记录
+                const timestamp = new Date().toLocaleString('zh-CN');
+                scanHistory.unshift({
+                    barcode: barcode,
+                    timestamp: timestamp,
+                    result: result
+                });
+                
+                if (scanHistory.length > 20) {
+                    scanHistory = scanHistory.slice(0, 20);
+                }
+                
+                localStorage.setItem('barcodeScanHistory', JSON.stringify(scanHistory));
+                updateHistoryDisplay();
+                
             } catch (error) {
-                showStatus(`解析错误: ${error.message}`, 'error');
-                logDebug(`解析错误: ${error.message}`);
-                console.error('解析错误:', error);
+                showStatus(`解析错误: ${error.message}`, 'warning');
             }
         }
         
-        // 条形码类型选择
-        barcodeTypeBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                // 移除所有active类
-                barcodeTypeBtns.forEach(b => b.classList.remove('active'));
-                // 添加active类到当前按钮
-                btn.classList.add('active');
-                // 更新当前条形码类型
-                currentBarcodeType = btn.dataset.type;
-                logDebug(`切换条形码类型为: ${currentBarcodeType}`);
-                
-                // 如果正在扫描，重新初始化检测器
-                if (isScanning) {
-                    stopScanning();
-                    setTimeout(() => {
-                        startScanning();
-                    }, 100);
-                }
-            });
-        });
-        
         // 开始扫描
-        startBtn.addEventListener('click', () => {
-            startScanning();
-        });
-        
-        // 开始扫描函数
-        async function startScanning() {
+        startBtn.addEventListener('click', async () => {
             try {
-                logDebug("开始启动摄像头扫描...");
-                
                 // 请求摄像头权限
                 stream = await navigator.mediaDevices.getUserMedia({ 
                     video: { 
@@ -1012,102 +742,69 @@
                 scannerOverlay.style.display = 'flex';
                 
                 // 初始化BarcodeDetector
-                const detectorInitialized = initBarcodeDetector();
+                initBarcodeDetector();
                 
-                if (!detectorInitialized) {
-                    showStatus('当前浏览器不支持条形码扫描，请使用手动输入功能', 'warning');
-                    logDebug("BarcodeDetector初始化失败，使用备用方案");
-                }
+                // 开始扫描循环
+                startScanLoop();
                 
                 // 更新UI状态
                 isScanning = true;
                 startBtn.disabled = true;
                 stopBtn.disabled = false;
                 
-                // 开始扫描循环
-                startScanLoop();
-                
-                showStatus(`摄像头已启动，正在扫描${currentBarcodeType.toUpperCase()}条形码`, 'info');
+                showStatus('摄像头已启动，请对准条形码', 'info');
                 
             } catch (error) {
-                logDebug("启动摄像头失败: " + error.message);
-                showStatus(`无法启动摄像头: ${error.message}。请确保已允许摄像头权限。`, 'error');
                 console.error('摄像头错误:', error);
-                
-                // 恢复UI状态
-                startBtn.disabled = false;
-                stopBtn.disabled = true;
+                showStatus(`摄像头错误: ${error.message}`, 'warning');
             }
-        }
+        });
         
         // 扫描循环
         function startScanLoop() {
-            if (!isScanning) return;
+            if (!isScanning || !barcodeDetector) return;
             
-            // 检查BarcodeDetector是否可用
-            if (barcodeDetector) {
-                // 使用BarcodeDetector API
-                barcodeDetector.detect(video)
-                    .then(barcodes => {
+            // 创建Canvas用于图像分析
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            scanInterval = setInterval(async () => {
+                if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    
+                    try {
+                        const barcodes = await barcodeDetector.detect(canvas);
                         if (barcodes.length > 0) {
                             const barcode = barcodes[0];
-                            logDebug(`检测到条形码: ${barcode.rawValue} (${barcode.format})`);
+                            console.log('检测到条形码:', barcode.rawValue);
                             
                             // 停止扫描
                             stopScanning();
                             
-                            // 处理扫描到的条形码
+                            // 处理条形码
                             processBarcode(barcode.rawValue);
                         }
-                        
-                        // 继续扫描
-                        if (isScanning) {
-                            animationFrameId = requestAnimationFrame(startScanLoop);
-                        }
-                    })
-                    .catch(error => {
-                        logDebug("检测条形码失败: " + error.message);
-                        if (isScanning) {
-                            animationFrameId = requestAnimationFrame(startScanLoop);
-                        }
-                    });
-            } else {
-                // 备用方案：简单的时间间隔检查
-                setTimeout(() => {
-                    if (isScanning) {
-                        // 这里可以添加简单的图像分析逻辑
-                        // 由于时间限制，这里只是保持循环
-                        startScanLoop();
+                    } catch (error) {
+                        console.error('条形码检测失败:', error);
                     }
-                }, 100);
-            }
+                }
+            }, 500); // 每500ms检测一次
         }
         
         // 停止扫描
-        stopBtn.addEventListener('click', () => {
-            stopScanning();
-        });
-        
-        // 停止扫描函数
         function stopScanning() {
-            logDebug("停止扫描...");
-            
-            // 停止动画帧
-            if (animationFrameId) {
-                cancelAnimationFrame(animationFrameId);
-                animationFrameId = null;
+            if (scanInterval) {
+                clearInterval(scanInterval);
+                scanInterval = null;
             }
             
-            // 停止视频流
             if (stream) {
                 stream.getTracks().forEach(track => track.stop());
                 stream = null;
             }
             
-            // 重置BarcodeDetector
-            barcodeDetector = null;
-            
-            // 更新UI状态
             video.style.display = 'none';
             scannerPlaceholder.style.display = 'flex';
             scannerOverlay.style.display = 'none';
@@ -1118,147 +815,109 @@
             showStatus('扫描已停止', 'info');
         }
         
+        stopBtn.addEventListener('click', stopScanning);
+        
+        // 上传图片
+        uploadBtn.addEventListener('click', () => {
+            fileInput.click();
+        });
+        
+        fileInput.addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            showStatus('正在分析图片...', 'info');
+            
+            try {
+                // 创建图片元素
+                const img = new Image();
+                const reader = new FileReader();
+                
+                reader.onload = async (e) => {
+                    img.src = e.target.result;
+                    
+                    img.onload = async () => {
+                        // 创建ImageBitmap
+                        const imageBitmap = await createImageBitmap(img);
+                        
+                        // 检测条形码
+                        const barcode = await detectBarcodeFromImage(imageBitmap);
+                        
+                        if (barcode) {
+                            processBarcode(barcode);
+                        } else {
+                            showStatus('未检测到条形码，请重试', 'warning');
+                        }
+                    };
+                };
+                
+                reader.readAsDataURL(file);
+                
+            } catch (error) {
+                console.error('图片处理错误:', error);
+                showStatus('图片处理失败', 'warning');
+            }
+            
+            // 重置文件输入
+            fileInput.value = '';
+        });
+        
         // 手动提交
         manualSubmit.addEventListener('click', () => {
             const barcode = manualCode.value.trim().toUpperCase();
             if (!barcode) {
-                showStatus('请输入条形码', 'error');
+                showStatus('请输入条形码', 'warning');
                 return;
             }
-            
             processBarcode(barcode);
         });
         
-        // 按Enter键提交手动输入
         manualCode.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 manualSubmit.click();
             }
         });
         
-        // 测试数据
-        testBtn.addEventListener('click', () => {
-            // 生成测试条形码：1A5 (32进制 = 1*32^2 + 10*32 + 5 = 1024 + 320 + 5 = 1349)
-            // 注意：A在自定义32进制中的值是10
-            // 性别: M (男)
-            // 年龄: 25
-            // 年份: 23 (2023)
-            // 月份: 9 (16进制9 = 9月)
-            // 随访: 1 (16进制1 = 第1次)
-            // 扩展: 01
-            const testBarcode = '1A5M251229101';
-            manualCode.value = testBarcode;
-            processBarcode(testBarcode);
-        });
-        
-        // 快速测试
-        quickTestBtn.addEventListener('click', () => {
-            // 生成随机测试条形码
-            let barcode = '';
-            
-            // 前3位：自定义32进制
-            for (let i = 0; i < 3; i++) {
-                barcode += CUSTOM_BASE32_CHARS[Math.floor(Math.random() * 32)];
-            }
-            
-            // 第4位：性别
-            const genders = ['M', 'F', 'G'];
-            barcode += genders[Math.floor(Math.random() * 3)];
-            
-            // 第5-6位：年龄 (20-80)
-            barcode += (Math.floor(Math.random() * 61) + 20).toString().padStart(2, '0');
-            
-            // 第7-8位：年份 (22-24)
-            barcode += (Math.floor(Math.random() * 3) + 22).toString().padStart(2, '0');
-            
-            // 第9位：月份 (1-12的16进制)
-            const month = Math.floor(Math.random() * 12) + 1;
-            barcode += month.toString(16).toUpperCase();
-            
-            // 第10位：随访次数 (1-5的16进制)
-            const followUp = Math.floor(Math.random() * 5) + 1;
-            barcode += followUp.toString(16).toUpperCase();
-            
-            // 第11-12位：扩展位
-            barcode += '01';
-            
-            manualCode.value = barcode;
-            processBarcode(barcode);
-        });
-        
-        // 调试模式
-        debugBtn.addEventListener('click', () => {
-            debugMode = !debugMode;
-            debugInfo.style.display = debugMode ? 'block' : 'none';
-            debugBtn.innerHTML = debugMode ? 
-                '<i class="fas fa-bug-slash"></i> 关闭调试' : 
-                '<i class="fas fa-bug"></i> 调试模式';
-            
-            logDebug(debugMode ? "调试模式已开启" : "调试模式已关闭");
-            showStatus(debugMode ? "调试模式已开启" : "调试模式已关闭", "info");
-        });
-        
         // 清除历史记录
         clearHistoryBtn.addEventListener('click', () => {
-            if (confirm('确定要清除所有扫描历史记录吗？')) {
+            if (scanHistory.length > 0 && confirm('确定要清除所有历史记录吗？')) {
                 scanHistory = [];
                 localStorage.removeItem('barcodeScanHistory');
                 updateHistoryDisplay();
                 showStatus('历史记录已清除', 'info');
-                logDebug("历史记录已清除");
             }
         });
         
-        // 页面卸载时停止扫描
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            // 检查兼容性
+            checkCompatibility();
+            
+            // 初始化历史记录
+            updateHistoryDisplay();
+            
+            // 初始化BarcodeDetector
+            initBarcodeDetector();
+            
+            // 添加测试数据按钮
+            const testBtn = document.createElement('button');
+            testBtn.className = 'btn btn-secondary';
+            testBtn.innerHTML = '<i class="fas fa-vial"></i> 测试数据';
+            testBtn.style.marginTop = '10px';
+            testBtn.onclick = () => {
+                manualCode.value = '1A5M251229101';
+                processBarcode('1A5M251229101');
+            };
+            document.querySelector('.manual-input').appendChild(testBtn);
+            
+            console.log('系统初始化完成，iOS兼容模式已启用');
+        });
+        
+        // 页面卸载时清理
         window.addEventListener('beforeunload', () => {
             if (isScanning) {
                 stopScanning();
             }
-        });
-        
-        // 检查浏览器兼容性
-        function checkCompatibility() {
-            const compatibilityInfo = document.createElement('div');
-            compatibilityInfo.className = 'status info';
-            compatibilityInfo.style.marginTop = '10px';
-            
-            // 检查BarcodeDetector API
-            if ('BarcodeDetector' in window) {
-                BarcodeDetector.getSupportedFormats()
-                    .then(formats => {
-                        logDebug(`浏览器原生支持的条形码格式: ${formats.join(', ')}`);
-                        if (formats.includes('code_128') || formats.includes('code_39')) {
-                            compatibilityInfo.textContent = '✅ 浏览器支持条形码扫描';
-                            compatibilityInfo.className = 'status success';
-                        } else {
-                            compatibilityInfo.textContent = '⚠️ 浏览器支持BarcodeDetector但不支持Code128/Code39';
-                            compatibilityInfo.className = 'status warning';
-                        }
-                    })
-                    .catch(() => {
-                        compatibilityInfo.textContent = '✅ 浏览器支持BarcodeDetector API';
-                        compatibilityInfo.className = 'status success';
-                    });
-            } else if (window.BarcodeDetectorPolyfill) {
-                compatibilityInfo.textContent = '✅ 使用polyfill支持条形码扫描';
-                compatibilityInfo.className = 'status success';
-            } else {
-                compatibilityInfo.textContent = '⚠️ 当前浏览器不支持条形码扫描API，请使用手动输入功能';
-                compatibilityInfo.className = 'status warning';
-            }
-            
-            document.querySelector('.scanner-section').appendChild(compatibilityInfo);
-        }
-        
-        // 初始化：检查兼容性
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log("系统初始化完成");
-            console.log("自定义32进制字符集:", CUSTOM_BASE32_CHARS);
-            
-            // 检查兼容性
-            setTimeout(checkCompatibility, 500);
-            
-            showStatus('系统已准备就绪，请使用手动输入功能测试解析', 'info');
         });
     </script>
 </body>
