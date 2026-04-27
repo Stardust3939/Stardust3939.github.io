@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>临床数据录入系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --success-color: #27ae60;
+            --light-color: #ecf0f1;
+            --border-color: #bdc3c7;
+            --text-color: #2c3e50;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background-color: #f9f9f9;
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+        
+        .app-header {
+            background-color: #f8f9fa;
+            padding: 20px 30px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .app-title {
+            font-size: 1.8rem;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        /* 前缀设置区域 */
+        .prefix-settings {
+            background-color: #e8f4fd;
+            padding: 12px 20px;
+            margin: 15px 25px 0 25px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 15px;
+            border: 1px solid #b8daff;
+        }
+        
+        .prefix-control {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .prefix-label {
+            font-weight: 600;
+            color: #0056b3;
+        }
+        
+        .prefix-select {
+            padding: 8px 12px;
+            border: 1px solid #b8daff;
+            border-radius: 4px;
+            font-size: 1rem;
+            background-color: white;
+            cursor: pointer;
+        }
+        
+        .apply-prefix-btn {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: 0.2s;
+        }
+        
+        .apply-prefix-btn:hover {
+            background-color: #2980b9;
+        }
+        
+        .prefix-hint {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+        
+        .main-content {
+            padding: 25px;
+        }
+        
+        .form-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border-radius: 6px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+        }
+        
+        .btn-primary {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+        
+        .btn-success {
+            background-color: var(--success-color);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #229954;
+        }
+        
+        .btn-danger {
+            background-color: var(--accent-color);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+        
+        .data-table-container {
+            overflow-x: auto;
+            margin-bottom: 25px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1100px;
+        }
+        
+        .data-table thead {
+            background-color: #f1f5f9;
+            color: var(--text-color);
+        }
+        
+        .data-table th {
+            padding: 14px 12px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.9rem;
+            border-right: 1px solid var(--border-color);
+            border-bottom: 2px solid var(--border-color);
+        }
+        
+        .data-table th:last-child {
+            border-right: none;
+        }
+        
+        .data-table tbody tr {
+            border-bottom: 1px solid var(--border-color);
+            transition: background-color 0.2s ease;
+        }
+        
+        .data-table tbody tr:hover {
+            background-color: rgba(52, 152, 219, 0.05);
+        }
+        
+        .data-table td {
+            padding: 10px 12px;
+            vertical-align: top;
+        }
+        
+        .input-field {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 0.9rem;
+            transition: border-color 0.3s ease;
+        }
+        
+        .input-field:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+        
+        .select-field {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 0.9rem;
+            background-color: white;
+            cursor: pointer;
+        }
+        
+        .action-cell {
+            text-align: center;
+            width: 80px;
+        }
+        
+        .delete-btn {
+            background-color: transparent;
+            border: none;
+            color: var(--accent-color);
+            cursor: pointer;
+            font-size: 1.1rem;
+            padding: 5px;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        .delete-btn:hover {
+            background-color: rgba(231, 76, 60, 0.1);
+        }
+        
+        .stats-container {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border-color);
+            flex-wrap: wrap;
+        }
+        
+        .stat-card {
+            background-color: var(--light-color);
+            border-radius: 6px;
+            padding: 15px;
+            flex: 1;
+            min-width: 180px;
+        }
+        
+        .stat-title {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            margin-bottom: 8px;
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+        
+        footer {
+            background-color: #f8f9fa;
+            padding: 15px 25px;
+            text-align: center;
+            border-top: 1px solid var(--border-color);
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content { padding: 15px; }
+            .form-actions { flex-direction: column; align-items: flex-start; }
+            .action-buttons { width: 100%; justify-content: space-between; }
+            .btn { flex: 1; justify-content: center; padding: 8px 12px; }
+            .app-title { font-size: 1.5rem; }
+        }
+        
+        .field-label {
+            display: block;
+            font-size: 0.8rem;
+            color: #7f8c8d;
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+        
+        .code-field {
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-weight: bold;
+            background-color: #f8f9fa;
+            padding: 8px 10px;
+            border-radius: 4px;
+            min-height: 36px;
+            display: flex;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+        
+        .code-explanation {
+            font-size: 0.75rem;
+            color: #7f8c8d;
+            margin-top: 3px;
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+        
+        .alert {
+            padding: 12px 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .molecular-input {
+            font-weight: bold;
+        }
+        
+        .valid-field {
+            border-color: var(--success-color) !important;
+        }
+        
+        .invalid-field {
+            border-color: var(--accent-color) !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="app-header">
+            <div class="header-content">
+                <div class="app-title">
+                    <i class="fas fa-clipboard-list"></i>
+                    <span>临床数据录入系统</span>
+                </div>
+                <div class="action-buttons">
+                    <button class="btn btn-success" id="addRowBtn">
+                        <i class="fas fa-plus"></i> 添加行
+                    </button>
+                    <button class="btn btn-primary" id="saveBtn">
+                        <i class="fas fa-file-excel"></i> 导出Excel
+                    </button>
+                    <button class="btn btn-danger" id="resetBtn">
+                        <i class="fas fa-redo"></i> 重置
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 前缀设置区域：下拉框 -->
+        <div class="prefix-settings">
+            <div class="prefix-control">
+                <span class="prefix-label"><i class="fas fa-tag"></i> 分子号前缀：</span>
+                <select id="molecularPrefix" class="prefix-select">
+                    <option value="K">K</option>
+                    <option value="L">L</option>
+                    <option value="U">U</option>
+                </select>
+                <button id="applyPrefixBtn" class="apply-prefix-btn">应用并更新所有分子号</button>
+                <span class="prefix-hint">(统一前缀，数字部分保持4位)</span>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div id="successAlert" class="alert alert-success">
+                <i class="fas fa-check-circle"></i> 数据已成功保存为Excel文件！
+            </div>
+            <div id="infoAlert" class="alert alert-info">
+                <i class="fas fa-info-circle"></i> 请输入患者数据，系统将自动计算Code字段。分子号前缀可选K/L/U。
+            </div>
+            
+            <div class="data-table-container">
+                <table class="data-table" id="dataTable">
+                    <thead>
+                        <tr>
+                            <th>操作</th><th>姓名</th><th>性别</th><th>年龄</th><th>分子号</th>
+                            <th>病案号</th><th>诊断</th><th>诊断备注</th><th>Code</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+            
+            <div class="stats-container">
+                <div class="stat-card"><div class="stat-title">总记录数</div><div class="stat-value" id="totalRecords">0</div></div>
+                <div class="stat-card"><div class="stat-title">男性患者</div><div class="stat-value" id="maleCount">0</div></div>
+                <div class="stat-card"><div class="stat-title">女性患者</div><div class="stat-value" id="femaleCount">0</div></div>
+                <div class="stat-card"><div class="stat-title">其他性别</div><div class="stat-value" id="otherGenderCount">0</div></div>
+            </div>
+            
+            <!-- Code格式说明（更新） -->
+            <div style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 6px; border: 1px solid #e9ecef;">
+                <h4 style="margin-bottom: 10px;"><i class="fas fa-info-circle"></i> Code格式说明</h4>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 10px; font-size: 0.85rem;">
+                    <div><strong>前3位</strong>: 分子号数字部分转32进制 (0-9,A-V)</div>
+                    <div><strong>4-6位</strong>: 性别(1位) + 年龄(2位) (M/F/G)</div>
+                    <div><strong>7-9位</strong>: 年份(2位) + 月份(1位) (1-9,A-C)</div>
+                    <div><strong>10-12位</strong>: 前缀编码(1位) + 固定扩展"V1"<br>K→0, L→1, U→2</div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>© 2025 临床数据录入系统 | 支持自定义前缀 K/L/U，Code自动同步</footer>
+    </div>
+
+    <script>
+        let dataRows = [];
+        
+        const tableBody = document.getElementById('tableBody');
+        const addRowBtn = document.getElementById('addRowBtn');
+        const saveBtn = document.getElementById('saveBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const successAlert = document.getElementById('successAlert');
+        const infoAlert = document.getElementById('infoAlert');
+        const totalRecordsEl = document.getElementById('totalRecords');
+        const maleCountEl = document.getElementById('maleCount');
+        const femaleCountEl = document.getElementById('femaleCount');
+        const otherGenderCountEl = document.getElementById('otherGenderCount');
+        const molecularPrefixSelect = document.getElementById('molecularPrefix');
+        const applyPrefixBtn = document.getElementById('applyPrefixBtn');
+        
+        const BASE32_CHARS = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
+        
+        // 获取当前选中的前缀
+        function getCurrentPrefix() {
+            return molecularPrefixSelect.value;
+        }
+        
+        // 根据前缀获取编码字符 (K→0, L→1, U→2)
+        function getPrefixCode(prefix) {
+            if (prefix === 'K') return '0';
+            if (prefix === 'L') return '1';
+            if (prefix === 'U') return '2';
+            return '0'; // 默认
+        }
+        
+        // 获取下一个分子号（自动递增数字部分，前缀使用当前设定）
+        function getNextMolecularNumber() {
+            const prefix = getCurrentPrefix();
+            if (dataRows.length === 0) return `${prefix}0001`;
+            let maxNum = 0;
+            dataRows.forEach(row => {
+                const match = row.molecularNumber.match(/\d{4}$/);
+                if (match) {
+                    const num = parseInt(match[0], 10);
+                    if (!isNaN(num) && num > maxNum) maxNum = num;
+                }
+            });
+            return `${prefix}${String(maxNum + 1).padStart(4, '0')}`;
+        }
+        
+        // 十进制转3位32进制
+        function toBase32(num) {
+            if (num === 0) return '000';
+            let result = '';
+            let n = num;
+            while (n > 0) {
+                result = BASE32_CHARS[n % 32] + result;
+                n = Math.floor(n / 32);
+            }
+            return result.padStart(3, '0');
+        }
+        
+        // 月份编码
+        function getMonthCode(month) {
+            if (month >= 1 && month <= 9) return month.toString();
+            if (month === 10) return 'A';
+            if (month === 11) return 'B';
+            if (month === 12) return 'C';
+            return '0';
+        }
+        
+        // 短日期
+        function getShortDate() {
+            const d = new Date();
+            const yy = String(d.getFullYear()).slice(-2);
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const dd = String(d.getDate()).padStart(2, '0');
+            return yy + mm + dd;
+        }
+        
+        // 计算Code（新规则：扩展位 = 前缀编码 + 'V1'）
+        function calculateCode(rowData) {
+            // 前3位：分子号数字部分转32进制
+            let molecularNum = 0;
+            const match = rowData.molecularNumber.match(/\d{4}$/);
+            if (match) molecularNum = parseInt(match[0], 10);
+            const part1 = toBase32(molecularNum);
+            
+            // 性别码
+            let genderCode = 'G';
+            if (rowData.gender === '男') genderCode = 'M';
+            else if (rowData.gender === '女') genderCode = 'F';
+            let agePart = '00';
+            if (rowData.age && !isNaN(rowData.age)) {
+                let a = parseInt(rowData.age);
+                if (a > 99) a = 99;
+                if (a >= 0) agePart = String(a).padStart(2, '0');
+            }
+            const part2 = genderCode + agePart;
+            
+            // 年月（当前日期）
+            const today = new Date();
+            const yearPart = String(today.getFullYear()).slice(-2);
+            const monthPart = getMonthCode(today.getMonth() + 1);
+            const part3 = yearPart + monthPart;
+            
+            // 扩展位：前缀编码 + 'V1'
+            const prefix = rowData.molecularNumber.charAt(0); // 提取分子号首字符
+            let prefixCode = getPrefixCode(prefix);
+            // 兼容已有数据：如果分子号前缀不是K/L/U，则默认按K处理
+            if (!['K','L','U'].includes(prefix)) prefixCode = '0';
+            const part4 = prefixCode + 'V1';
+            
+            return part1 + part2 + part3 + part4;
+        }
+        
+        // 刷新一行的显示
+        function refreshRowDisplay(rowId, rowIndex) {
+            const rowData = dataRows[rowIndex];
+            const rowElement = document.getElementById(`row-${rowId}`);
+            if (!rowElement) return;
+            
+            // 更新分子号显示
+            const molecularInput = rowElement.querySelector('.molecular-number-input');
+            if (molecularInput) molecularInput.value = rowData.molecularNumber;
+            
+            // 重新计算Code
+            const newCode = calculateCode(rowData);
+            rowData.code = newCode;
+            rowData.len = newCode.length.toString();
+            
+            const codeDiv = rowElement.querySelector('.code-field');
+            if (codeDiv) codeDiv.textContent = newCode;
+            
+            const expDiv = rowElement.querySelector('.code-explanation');
+            if (expDiv) {
+                const prefixCode = getPrefixCode(rowData.molecularNumber.charAt(0));
+                expDiv.textContent = `分子号:${toBase32(parseInt(rowData.molecularNumber.match(/\d+/)[0]))} 性别年龄:${rowData.gender==='男'?'M':(rowData.gender==='女'?'F':'G')}${String(rowData.age||'00').padStart(2,'0')} 年月:${new Date().getFullYear().toString().slice(-2)}${getMonthCode(new Date().getMonth()+1)} 扩展:${prefixCode}V1`;
+            }
+            
+            // 验证分子号格式
+            const prefix = getCurrentPrefix();
+            const pattern = new RegExp(`^${prefix}\\d{4}$`);
+            if (pattern.test(rowData.molecularNumber)) {
+                molecularInput?.classList.remove('invalid-field');
+                molecularInput?.classList.add('valid-field');
+            } else {
+                molecularInput?.classList.remove('valid-field');
+                molecularInput?.classList.add('invalid-field');
+            }
+        }
+        
+        // 添加新行
+        function addNewRow() {
+            const rowId = Date.now() + Math.random();
+            const shortDate = getShortDate();
+            const molecularNumber = getNextMolecularNumber();
+            const row = document.createElement('tr');
+            row.id = `row-${rowId}`;
+            row.innerHTML = `
+                <td class="action-cell"><button class="delete-btn" data-row-id="${rowId}"><i class="fas fa-trash"></i></button></td>
+                <td><div class="field-label">姓名</div><input type="text" class="input-field name-input" data-row-id="${rowId}" placeholder="姓名"></td>
+                <td><div class="field-label">性别</div><select class="select-field gender-select" data-row-id="${rowId}"><option value="">请选择</option><option value="男">男</option><option value="女">女</option><option value="其他">其他</option></select></td>
+                <td><div class="field-label">年龄</div><input type="number" class="input-field age-input" data-row-id="${rowId}" min="0" max="150" placeholder="年龄"></td>
+                <td><div class="field-label">分子号</div><input type="text" class="input-field molecular-input molecular-number-input" data-row-id="${rowId}" value="${molecularNumber}"></td>
+                <td><div class="field-label">病案号</div><input type="text" class="input-field case-number-input" data-row-id="${rowId}" placeholder="病案号"></td>
+                <td><div class="field-label">诊断</div><input type="text" class="input-field diagnosis-input" data-row-id="${rowId}" placeholder="诊断"></td>
+                <td><div class="field-label">诊断备注</div><input type="text" class="input-field diagnosis-note-input" data-row-id="${rowId}" placeholder="备注"></td>
+                <td><div class="field-label">Code</div><div class="code-field" data-row-id="${rowId}">待计算</div><div class="code-explanation" data-row-id="${rowId}"></div></td>
+            `;
+            tableBody.appendChild(row);
+            
+            const rowData = {
+                id: rowId,
+                name: '', gender: '', age: '', molecularNumber: molecularNumber,
+                caseNumber: '', diagnosis: '', diagnosisNote: '',
+                code: '', len: '0', name2: '', molecularNumber2: molecularNumber, date: shortDate
+            };
+            dataRows.push(rowData);
+            setupRowEvents(rowId);
+            const idx = dataRows.length - 1;
+            refreshRowDisplay(rowId, idx);
+            updateStatistics();
+        }
+        
+        function setupRowEvents(rowId) {
+            const el = document.getElementById(`row-${rowId}`);
+            if (!el) return;
+            const inputs = el.querySelectorAll('.input-field, .select-field');
+            inputs.forEach(inp => {
+                inp.removeEventListener('input', handleChange);
+                inp.removeEventListener('change', handleChange);
+                inp.addEventListener('input', handleChange);
+                inp.addEventListener('change', handleChange);
+            });
+            const delBtn = el.querySelector('.delete-btn');
+            if (delBtn) delBtn.addEventListener('click', () => deleteRow(rowId));
+        }
+        
+        function handleChange(e) {
+            const input = e.target;
+            const rowId = input.dataset.rowId;
+            const idx = dataRows.findIndex(r => r.id.toString() === rowId);
+            if (idx === -1) return;
+            const row = dataRows[idx];
+            const cls = input.className;
+            if (cls.includes('name-input')) { row.name = input.value; row.name2 = input.value; }
+            else if (cls.includes('gender-select')) row.gender = input.value;
+            else if (cls.includes('age-input')) row.age = input.value;
+            else if (cls.includes('molecular-number-input')) {
+                row.molecularNumber = input.value;
+                row.molecularNumber2 = input.value;
+            }
+            else if (cls.includes('case-number-input')) row.caseNumber = input.value;
+            else if (cls.includes('diagnosis-input')) row.diagnosis = input.value;
+            else if (cls.includes('diagnosis-note-input')) row.diagnosisNote = input.value;
+            refreshRowDisplay(rowId, idx);
+            updateStatistics();
+        }
+        
+        function deleteRow(rowId) {
+            const idx = dataRows.findIndex(r => r.id.toString() === rowId);
+            if (idx !== -1) dataRows.splice(idx, 1);
+            document.getElementById(`row-${rowId}`)?.remove();
+            if (dataRows.length === 0) addNewRow();
+            updateStatistics();
+            showAlert('已删除数据行', 'info');
+        }
+        
+        // 统一更新所有行的前缀（应用新前缀）
+        function applyNewPrefix() {
+            const newPrefix = getCurrentPrefix();
+            if (dataRows.length === 0) return;
+            let changes = 0;
+            for (let row of dataRows) {
+                let old = row.molecularNumber;
+                let match = old.match(/\d{4}$/);
+                let numPart = match ? match[0] : '0001';
+                let newMolecular = newPrefix + numPart;
+                if (newMolecular !== old) {
+                    row.molecularNumber = newMolecular;
+                    row.molecularNumber2 = newMolecular;
+                    changes++;
+                }
+            }
+            // 刷新所有行显示
+            dataRows.forEach((row, idx) => {
+                refreshRowDisplay(row.id, idx);
+            });
+            if (changes) showAlert(`已将 ${changes} 行前缀统一为 "${newPrefix}"`, 'info');
+            else showAlert(`当前前缀已是 "${newPrefix}"`, 'info');
+            updateStatistics();
+        }
+        
+        function updateStatistics() {
+            totalRecordsEl.textContent = dataRows.length;
+            const male = dataRows.filter(r => r.gender === '男').length;
+            const female = dataRows.filter(r => r.gender === '女').length;
+            const other = dataRows.length - male - female;
+            maleCountEl.textContent = male;
+            femaleCountEl.textContent = female;
+            otherGenderCountEl.textContent = other;
+        }
+        
+        // 导出Excel（包含隐藏字段）
+        function saveToExcel() {
+            if (dataRows.length === 0) { showAlert('无数据可导出', 'info'); return; }
+            const excelData = dataRows.map(row => ({
+                '姓名': row.name, '性别': row.gender, '年龄': row.age,
+                '分子号': row.molecularNumber, '病案号': row.caseNumber,
+                '诊断': row.diagnosis, '诊断备注': row.diagnosisNote,
+                'Code': row.code, 'Len': row.len, '姓名2': row.name2,
+                '分子号2': row.molecularNumber2, '日期': row.date
+            }));
+            const ws = XLSX.utils.json_to_sheet(excelData);
+            ws['!cols'] = [{wch:10},{wch:6},{wch:6},{wch:10},{wch:12},{wch:20},{wch:15},{wch:15},{wch:6},{wch:10},{wch:10},{wch:10}];
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "临床数据");
+            const today = new Date();
+            const fn = `临床数据_${today.getFullYear()}${String(today.getMonth()+1).padStart(2,'0')}${String(today.getDate()).padStart(2,'0')}.xlsx`;
+            XLSX.writeFile(wb, fn);
+            showAlert(`导出成功: ${fn}`, 'success');
+        }
+        
+        function resetAll() {
+            if (confirm('重置将清空所有数据，确定吗？')) {
+                dataRows = [];
+                tableBody.innerHTML = '';
+                addNewRow();
+                showAlert('已重置', 'info');
+            }
+        }
+        
+        function showAlert(msg, type) {
+            if (type === 'success') {
+                successAlert.innerHTML = `<i class="fas fa-check-circle"></i> ${msg}`;
+                successAlert.style.display = 'block';
+                infoAlert.style.display = 'none';
+                setTimeout(() => { successAlert.style.display = 'none'; infoAlert.style.display = 'block'; }, 4000);
+            } else {
+                infoAlert.innerHTML = `<i class="fas fa-info-circle"></i> ${msg}`;
+                infoAlert.style.display = 'block';
+                successAlert.style.display = 'none';
+            }
+        }
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            infoAlert.style.display = 'block';
+            addNewRow();
+            updateStatistics();
+            addRowBtn.addEventListener('click', addNewRow);
+            saveBtn.addEventListener('click', saveToExcel);
+            resetBtn.addEventListener('click', resetAll);
+            applyPrefixBtn.addEventListener('click', applyNewPrefix);
+        });
+    </script>
+</body>
+</html>
