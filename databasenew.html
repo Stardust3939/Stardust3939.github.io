@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
     <style>
-        /* 样式与之前保持一致，略作优化 */
         :root {
             --primary-color: #2c3e50;
             --secondary-color: #3498db;
@@ -90,7 +89,7 @@
                 <option value="K">K</option><option value="L">L</option><option value="U">U</option>
             </select>
             <button id="applyPrefixBtn" class="apply-prefix-btn">应用并更新所有分子号</button>
-            <span class="prefix-hint">(统一前缀，数字部分保留4位)</span>
+            <span class="prefix-hint">(统一前缀，数字部分保持4位)</span>
         </div>
     </div>
 
@@ -142,10 +141,7 @@
     const applyPrefixBtn = document.getElementById('applyPrefixBtn');
     const BASE32_CHARS = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
 
-    // 获取当前前缀
     function getCurrentPrefix() { return molecularPrefixSelect.value; }
-
-    // 前缀->编码
     function getPrefixCode(prefix) {
         if (prefix === 'K') return '0';
         if (prefix === 'L') return '1';
@@ -153,7 +149,6 @@
         return '0';
     }
 
-    // 获取下一个分子号（基于当前数据及当前前缀）
     function getNextMolecularNumber() {
         const prefix = getCurrentPrefix();
         if (dataRows.length === 0) return `${prefix}0001`;
@@ -165,7 +160,6 @@
         return `${prefix}${String(maxNum+1).padStart(4,'0')}`;
     }
 
-    // 十进制转3位32进制
     function toBase32(num) {
         if (num === 0) return '000';
         let res = '';
@@ -174,7 +168,6 @@
         return res.padStart(3,'0');
     }
 
-    // 月份编码
     function getMonthCode(month) {
         if (month>=1 && month<=9) return month.toString();
         if (month===10) return 'A';
@@ -183,13 +176,11 @@
         return '0';
     }
 
-    // 短日期
     function getShortDate() {
         const d = new Date();
         return String(d.getFullYear()).slice(-2) + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0');
     }
 
-    // 计算Code
     function calculateCode(rowData) {
         let num = 0;
         const match = rowData.molecularNumber.match(/\d{4}$/);
@@ -214,7 +205,6 @@
         return part1+part2+part3+part4;
     }
 
-    // 刷新行显示（包括分子号、Code、验证等）
     function refreshRowDisplay(rowId, idx) {
         const rowData = dataRows[idx];
         const rowEl = document.getElementById(`row-${rowId}`);
@@ -243,7 +233,6 @@
         }
     }
 
-    // 添加新行
     function addNewRow() {
         const rowId = Date.now() + Math.random();
         const molNum = getNextMolecularNumber();
@@ -290,7 +279,7 @@
     function handleChange(e) {
         const inp = e.target;
         const rowId = inp.dataset.rowId;
-        const idx = dataRows.findIndex(r => r.id.toString() === rowId);
+        const idx = dataRows.findIndex(r => r.id == rowId);  // 使用 == 自动类型转换
         if (idx === -1) return;
         const row = dataRows[idx];
         const cls = inp.className;
@@ -306,15 +295,26 @@
     }
 
     function deleteRow(rowId) {
-        const idx = dataRows.findIndex(r => r.id.toString() === rowId);
-        if (idx !== -1) dataRows.splice(idx,1);
-        document.getElementById(`row-${rowId}`)?.remove();
-        if (dataRows.length === 0) addNewRow();
+        // 从数组中删除
+        const idx = dataRows.findIndex(r => r.id == rowId);
+        if (idx !== -1) {
+            dataRows.splice(idx, 1);
+        }
+        // 从DOM中删除
+        const rowElement = document.getElementById(`row-${rowId}`);
+        if (rowElement) rowElement.remove();
+        
+        // 如果数据为空，添加一个默认行
+        if (dataRows.length === 0) {
+            addNewRow();
+        } else {
+            // 强制刷新所有行的显示（确保分子号重新整理非必须，但可以保持显示一致）
+            dataRows.forEach((row, i) => refreshRowDisplay(row.id, i));
+        }
         updateStatistics();
         showAlert('已删除数据行', 'info');
     }
 
-    // 统一应用前缀
     function applyNewPrefix() {
         const newPrefix = getCurrentPrefix();
         if (dataRows.length === 0) return;
@@ -350,14 +350,13 @@
                 const sheet = workbook.Sheets[workbook.SheetNames[0]];
                 const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
                 if (!rows || rows.length < 2) { showAlert('文件至少需要标题行+数据行', 'info'); return; }
-                // 跳过第一行（标题），从索引1开始
                 const dataRowsRaw = rows.slice(1);
                 let importedCount = 0;
                 const newRows = [];
                 const currentPrefix = getCurrentPrefix();
 
                 for (let r of dataRowsRaw) {
-                    if (r.length < 7) continue; // 至少7列
+                    if (r.length < 7) continue;
                     let name = (r[0] || '').toString().trim();
                     let genderRaw = (r[1] || '').toString().trim();
                     let ageRaw = (r[2] !== undefined && r[2] !== '') ? parseInt(r[2]) : '';
@@ -366,43 +365,29 @@
                     let diagnosis = (r[5] || '').toString().trim();
                     let diagnosisNote = (r[6] || '').toString().trim();
 
-                    // 处理性别：支持 男/女/M/F
                     let gender = '';
                     if (genderRaw === '男' || genderRaw === 'M') gender = '男';
                     else if (genderRaw === '女' || genderRaw === 'F') gender = '女';
                     else gender = '其他';
 
-                    // 处理年龄
                     let age = (isNaN(ageRaw) || ageRaw === '') ? '' : String(ageRaw);
-
-                    // 处理分子号：只取数字部分（忽略任何非数字字符，取最后四位连续数字）
                     let molecularNumber = '';
                     let numberPart = '';
                     const digits = molecularNumberRaw.match(/\d+/g);
                     if (digits && digits.length) {
-                        // 取最后一个数字串，并取最后4位
                         let lastDigits = digits[digits.length-1];
                         numberPart = lastDigits.slice(-4);
                         if (numberPart.length < 4) numberPart = numberPart.padStart(4, '0');
-                    } else {
-                        // 没有数字，将自动生成
-                        numberPart = '';
                     }
-                    if (numberPart) {
-                        molecularNumber = currentPrefix + numberPart;
-                    } else {
-                        molecularNumber = ''; // 稍后自动生成
-                    }
+                    if (numberPart) molecularNumber = currentPrefix + numberPart;
+                    else molecularNumber = '';
 
-                    // 若分子号无效或为空，自动生成
                     if (!molecularNumber || !/^\D+\d{4}$/.test(molecularNumber)) {
-                        // 临时生成一个占位，后面统一分配
                         molecularNumber = currentPrefix + '0000';
                     }
 
                     const rowId = Date.now() + Math.random() + importedCount;
                     const shortDate = getShortDate();
-
                     const rowData = {
                         id: rowId, name: name, gender: gender, age: age, molecularNumber: molecularNumber,
                         caseNumber: caseNumber, diagnosis: diagnosis, diagnosisNote: diagnosisNote,
@@ -414,7 +399,6 @@
 
                 if (importedCount === 0) { showAlert('未读取到有效数据，请检查列数是否至少7列', 'info'); return; }
 
-                // 批量添加新行到DOM和数据数组
                 for (let rd of newRows) {
                     const addHtml = `
                         <tr id="row-${rd.id}">
@@ -427,14 +411,13 @@
                             <td><div class="field-label">诊断</div><input type="text" class="input-field diagnosis-input" data-row-id="${rd.id}" value="${escapeHtml(rd.diagnosis)}" placeholder="诊断"></td>
                             <td><div class="field-label">诊断备注</div><input type="text" class="input-field diagnosis-note-input" data-row-id="${rd.id}" value="${escapeHtml(rd.diagnosisNote)}" placeholder="备注"></td>
                             <td><div class="field-label">Code</div><div class="code-field" data-row-id="${rd.id}">待计算</div><div class="code-explanation" data-row-id="${rd.id}"></div></td>
-                        </tr>`;
+                        </table>`;
                     tableBody.insertAdjacentHTML('beforeend', addHtml);
                     dataRows.push(rd);
                     setupRowEvents(rd.id);
                 }
 
-                // 重新整理分子号：检测重复并重新分配唯一数字（基于当前前缀）
-                // 先收集所有现有分子号数字部分
+                // 整理分子号唯一性
                 let usedNumbers = new Set();
                 for (let i=0; i<dataRows.length; i++) {
                     let match = dataRows[i].molecularNumber.match(/\d{4}$/);
@@ -445,20 +428,17 @@
                     let currentNum = 0;
                     let match = dataRows[i].molecularNumber.match(/\d{4}$/);
                     if (match) currentNum = parseInt(match[0],10);
-                    if (!match || usedNumbers.has(currentNum) && [...usedNumbers].filter(n=>n===currentNum).length>1) {
-                        // 重复或无效，重新分配
+                    if (!match || (usedNumbers.has(currentNum) && [...usedNumbers].filter(n=>n===currentNum).length>1)) {
                         let newNum = nextNum++;
                         let newMol = currentPrefix + String(newNum).padStart(4,'0');
                         dataRows[i].molecularNumber = newMol;
                         dataRows[i].molecularNumber2 = newMol;
-                        // 更新DOM
                         const rowEl = document.getElementById(`row-${dataRows[i].id}`);
                         if (rowEl) {
                             const molInput = rowEl.querySelector('.molecular-number-input');
                             if (molInput) molInput.value = newMol;
                         }
                     } else {
-                        // 确保前缀正确
                         let numPart = String(currentNum).padStart(4,'0');
                         let expected = currentPrefix + numPart;
                         if (dataRows[i].molecularNumber !== expected) {
@@ -473,7 +453,6 @@
                     }
                 }
 
-                // 重新刷新所有行的Code和显示
                 dataRows.forEach((row, idx) => refreshRowDisplay(row.id, idx));
                 updateStatistics();
                 showAlert(`成功导入 ${importedCount} 条数据，分子号已根据当前前缀自动整理`, 'success');
@@ -486,12 +465,13 @@
     function escapeHtml(str) {
         if (!str) return '';
         return String(str).replace(/[&<>]/g, function(m) {
-            if (m === '&') return '&amp;'; if (m === '<') return '&lt;'; if (m === '>') return '&gt;';
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
             return m;
         });
     }
 
-    // 导出Excel
     function saveToExcel() {
         if (dataRows.length === 0) { showAlert('无数据可导出', 'info'); return; }
         const excelData = dataRows.map(row => ({
@@ -540,7 +520,6 @@
         }
     }
 
-    // 初始化
     document.addEventListener('DOMContentLoaded', () => {
         infoAlert.style.display = 'block';
         addNewRow();
