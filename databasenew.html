@@ -29,6 +29,7 @@
         .apply-prefix-btn { background:var(--secondary-color); color:white; border:none; padding:6px 14px; border-radius:4px; cursor:pointer; font-size:0.9rem; transition:0.2s; }
         .apply-prefix-btn:hover { background:#2980b9; }
         .prefix-hint { font-size:0.8rem; color:#6c757d; }
+        .warning-note { background:#fff3cd; color:#856404; padding:4px 10px; border-radius:20px; font-size:0.75rem; font-weight:500; }
         .main-content { padding:25px; }
         .form-actions { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; padding-bottom:15px; border-bottom:1px solid var(--border-color); flex-wrap:wrap; gap:15px; }
         .action-buttons { display:flex; gap:12px; flex-wrap:wrap; }
@@ -63,6 +64,7 @@
         .alert { padding:12px 15px; border-radius:6px; margin-bottom:15px; display:none; }
         .alert-success { background:#d4edda; color:#155724; border:1px solid #c3e6cb; }
         .alert-info { background:#d1ecf1; color:#0c5460; border:1px solid #bee5eb; }
+        .alert-warning { background:#fff3cd; color:#856404; border:1px solid #ffeeba; }
         .valid-field { border-color:var(--success-color) !important; }
         .invalid-field { border-color:var(--accent-color) !important; }
         @media (max-width:768px) { .main-content { padding:15px; } .form-actions { flex-direction:column; align-items:flex-start; } .action-buttons { width:100%; justify-content:space-between; } .btn { flex:1; justify-content:center; } .app-title { font-size:1.5rem; } }
@@ -89,13 +91,15 @@
                 <option value="K">K</option><option value="L">L</option><option value="U">U</option>
             </select>
             <button id="applyPrefixBtn" class="apply-prefix-btn">应用并更新所有分子号</button>
-            <span class="prefix-hint">(统一前缀，数字部分保持4位)</span>
+            <span class="prefix-hint">(统一前缀，数字部分5位，范围 00001 - 32767)</span>
+            <span class="warning-note"><i class="fas fa-exclamation-triangle"></i> 数字部分不能超过32767，否则Code会溢出！</span>
         </div>
     </div>
 
     <div class="main-content">
         <div id="successAlert" class="alert alert-success"><i class="fas fa-check-circle"></i> 操作成功！</div>
         <div id="infoAlert" class="alert alert-info"><i class="fas fa-info-circle"></i> 支持结构化Excel导入，按列顺序：姓名、性别、年龄、分子号(数字)、病案号、诊断、诊断备注。性别支持“男/女”或“M/F”。</div>
+        <div id="warningAlert" class="alert alert-warning" style="display:none;"></div>
 
         <div class="data-table-container">
             <table class="data-table" id="dataTable">
@@ -114,18 +118,20 @@
         <div style="margin-top:20px;padding:15px;background:#f8f9fa;border-radius:6px;border:1px solid #e9ecef;">
             <h4><i class="fas fa-info-circle"></i> Code格式说明</h4>
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px;font-size:0.85rem;">
-                <div><strong>前3位</strong>: 分子号数字部分转32进制 (0-9,A-V)</div>
+                <div><strong>前3位</strong>: 分子号数字部分转32进制 (0-9,A-V) 范围 000-7FF (0-32767)</div>
                 <div><strong>4-6位</strong>: 性别(1位) + 年龄(2位) (M/F/G)</div>
                 <div><strong>7-9位</strong>: 年份(2位) + 月份(1位) (1-9,A-C)</div>
                 <div><strong>10-12位</strong>: 前缀编码(1位) + 固定扩展"V1"<br>K→0, L→1, U→2</div>
             </div>
+            <div class="warning-note" style="margin-top:10px;display:inline-block;"><i class="fas fa-exclamation-triangle"></i> 分子号数字部分必须 ≤ 32767，否则Code将无法正常表示！</div>
         </div>
     </div>
-    <footer>© 2025 临床数据录入系统 | 支持结构化Excel导入，智能识别性别，自动拼接分子号前缀</footer>
+    <footer>© 2025 临床数据录入系统 | 分子号5位数字，自动限制 ≤ 32767 | Code算法不变</footer>
 </div>
 
 <script>
     let dataRows = [];
+    const MAX_MOL_NUM = 32767;   // 最大允许的数字部分（32进制三位最大值）
     const tableBody = document.getElementById('tableBody');
     const addRowBtn = document.getElementById('addRowBtn');
     const importBtn = document.getElementById('importBtn');
@@ -133,6 +139,7 @@
     const resetBtn = document.getElementById('resetBtn');
     const successAlert = document.getElementById('successAlert');
     const infoAlert = document.getElementById('infoAlert');
+    const warningAlert = document.getElementById('warningAlert');
     const totalRecordsEl = document.getElementById('totalRecords');
     const maleCountEl = document.getElementById('maleCount');
     const femaleCountEl = document.getElementById('femaleCount');
@@ -149,23 +156,51 @@
         return '0';
     }
 
-    function getNextMolecularNumber() {
-        const prefix = getCurrentPrefix();
-        if (dataRows.length === 0) return `${prefix}0001`;
-        let maxNum = 0;
-        dataRows.forEach(row => {
-            const match = row.molecularNumber.match(/\d{4}$/);
-            if (match) { let n = parseInt(match[0],10); if (!isNaN(n) && n>maxNum) maxNum=n; }
-        });
-        return `${prefix}${String(maxNum+1).padStart(4,'0')}`;
+    // 验证分子号数字部分是否合法（1-5位数字，≤ MAX_MOL_NUM）
+    function isValidMolecularNumberNumber(num) {
+        if (isNaN(num)) return false;
+        let n = parseInt(num, 10);
+        return n >= 1 && n <= MAX_MOL_NUM;
     }
 
+    // 格式化分子号：前缀 + 5位数字（不足补零）
+    function formatMolecularNumber(prefix, num) {
+        return prefix + String(num).padStart(5, '0');
+    }
+
+    // 从完整分子号中提取数字部分（整数）
+    function getNumberFromMolecular(molecular) {
+        const match = molecular.match(/\d+$/);
+        if (!match) return null;
+        let num = parseInt(match[0], 10);
+        if (isNaN(num)) return null;
+        return num;
+    }
+
+    // 获取下一个可用的分子号（基于当前数据，数字部分递增，不超过 MAX_MOL_NUM）
+    function getNextMolecularNumber() {
+        const prefix = getCurrentPrefix();
+        if (dataRows.length === 0) return formatMolecularNumber(prefix, 1);
+        let maxNum = 0;
+        for (let row of dataRows) {
+            let n = getNumberFromMolecular(row.molecularNumber);
+            if (n !== null && n > maxNum) maxNum = n;
+        }
+        let nextNum = maxNum + 1;
+        if (nextNum > MAX_MOL_NUM) {
+            showAlert(`分子号已达上限 ${MAX_MOL_NUM}，无法添加新行`, 'warning');
+            return null;
+        }
+        return formatMolecularNumber(prefix, nextNum);
+    }
+
+    // 十进制转3位32进制
     function toBase32(num) {
         if (num === 0) return '000';
         let res = '';
         let n = num;
         while (n>0) { res = BASE32_CHARS[n%32] + res; n = Math.floor(n/32); }
-        return res.padStart(3,'0');
+        return res.padStart(3, '0');
     }
 
     function getMonthCode(month) {
@@ -182,9 +217,8 @@
     }
 
     function calculateCode(rowData) {
-        let num = 0;
-        const match = rowData.molecularNumber.match(/\d{4}$/);
-        if (match) num = parseInt(match[0],10);
+        let num = getNumberFromMolecular(rowData.molecularNumber);
+        if (num === null) num = 0;
         const part1 = toBase32(num);
         let genderCode = 'G';
         if (rowData.gender === '男') genderCode = 'M';
@@ -218,24 +252,36 @@
         if (codeDiv) codeDiv.textContent = newCode;
         const expDiv = rowEl.querySelector('.code-explanation');
         if (expDiv) {
-            let num = 0;
-            const m = rowData.molecularNumber.match(/\d{4}$/);
-            if (m) num = parseInt(m[0],10);
+            let num = getNumberFromMolecular(rowData.molecularNumber) || 0;
             expDiv.innerHTML = `分子号:${toBase32(num)} 性别年龄:${rowData.gender==='男'?'M':(rowData.gender==='女'?'F':'G')}${String(rowData.age||'00').padStart(2,'0')} 年月:${new Date().getFullYear().toString().slice(-2)}${getMonthCode(new Date().getMonth()+1)} 扩展:${getPrefixCode(rowData.molecularNumber.charAt(0))}V1`;
         }
-        const pattern = new RegExp(`^${getCurrentPrefix()}\\d{4}$`);
-        if (pattern.test(rowData.molecularNumber)) {
-            molecularInput?.classList.remove('invalid-field');
-            molecularInput?.classList.add('valid-field');
+        const numVal = getNumberFromMolecular(rowData.molecularNumber);
+        const isValid = (numVal !== null && numVal >= 1 && numVal <= MAX_MOL_NUM);
+        if (isValid && molecularInput) {
+            molecularInput.classList.remove('invalid-field');
+            molecularInput.classList.add('valid-field');
         } else {
             molecularInput?.classList.remove('valid-field');
             molecularInput?.classList.add('invalid-field');
         }
     }
 
+    // 尝试设置分子号（含校验）
+    function setMolecularNumber(rowData, newMolecular) {
+        let num = getNumberFromMolecular(newMolecular);
+        if (num === null || num < 1 || num > MAX_MOL_NUM) {
+            showAlert(`分子号数字部分必须在 1 到 ${MAX_MOL_NUM} 之间`, 'warning');
+            return false;
+        }
+        rowData.molecularNumber = newMolecular;
+        rowData.molecularNumber2 = newMolecular;
+        return true;
+    }
+
     function addNewRow() {
+        const newMol = getNextMolecularNumber();
+        if (!newMol) return;  // 已达上限
         const rowId = Date.now() + Math.random();
-        const molNum = getNextMolecularNumber();
         const shortDate = getShortDate();
         const rowHtml = `
             <tr id="row-${rowId}">
@@ -243,7 +289,7 @@
                 <td><div class="field-label">姓名</div><input type="text" class="input-field name-input" data-row-id="${rowId}" placeholder="姓名"></td>
                 <td><div class="field-label">性别</div><select class="select-field gender-select" data-row-id="${rowId}"><option value="">请选择</option><option value="男">男</option><option value="女">女</option><option value="其他">其他</option></select></td>
                 <td><div class="field-label">年龄</div><input type="number" class="input-field age-input" data-row-id="${rowId}" min="0" max="150" placeholder="年龄"></td>
-                <td><div class="field-label">分子号</div><input type="text" class="input-field molecular-input molecular-number-input" data-row-id="${rowId}" value="${molNum}"></td>
+                <td><div class="field-label">分子号</div><input type="text" class="input-field molecular-input molecular-number-input" data-row-id="${rowId}" value="${newMol}"></td>
                 <td><div class="field-label">病案号</div><input type="text" class="input-field case-number-input" data-row-id="${rowId}" placeholder="病案号"></td>
                 <td><div class="field-label">诊断</div><input type="text" class="input-field diagnosis-input" data-row-id="${rowId}" placeholder="诊断"></td>
                 <td><div class="field-label">诊断备注</div><input type="text" class="input-field diagnosis-note-input" data-row-id="${rowId}" placeholder="备注"></td>
@@ -251,9 +297,9 @@
             </tr>`;
         tableBody.insertAdjacentHTML('beforeend', rowHtml);
         const rowData = {
-            id: rowId, name: '', gender: '', age: '', molecularNumber: molNum,
+            id: rowId, name: '', gender: '', age: '', molecularNumber: newMol,
             caseNumber: '', diagnosis: '', diagnosisNote: '', code: '', len: '0',
-            name2: '', molecularNumber2: molNum, date: shortDate
+            name2: '', molecularNumber2: newMol, date: shortDate
         };
         dataRows.push(rowData);
         const idx = dataRows.length-1;
@@ -279,14 +325,32 @@
     function handleChange(e) {
         const inp = e.target;
         const rowId = inp.dataset.rowId;
-        const idx = dataRows.findIndex(r => r.id == rowId);  // 使用 == 自动类型转换
+        const idx = dataRows.findIndex(r => r.id == rowId);
         if (idx === -1) return;
         const row = dataRows[idx];
         const cls = inp.className;
         if (cls.includes('name-input')) { row.name = inp.value; row.name2 = inp.value; }
         else if (cls.includes('gender-select')) row.gender = inp.value;
         else if (cls.includes('age-input')) row.age = inp.value;
-        else if (cls.includes('molecular-number-input')) { row.molecularNumber = inp.value; row.molecularNumber2 = inp.value; }
+        else if (cls.includes('molecular-number-input')) {
+            let newMol = inp.value.trim();
+            let num = getNumberFromMolecular(newMol);
+            if (num !== null && num >= 1 && num <= MAX_MOL_NUM) {
+                // 确保前缀与当前设定一致（若前缀不同则自动修正）
+                const currentPrefix = getCurrentPrefix();
+                const expectedMol = formatMolecularNumber(currentPrefix, num);
+                if (expectedMol !== newMol) {
+                    newMol = expectedMol;
+                    inp.value = expectedMol;
+                }
+                row.molecularNumber = newMol;
+                row.molecularNumber2 = newMol;
+                refreshRowDisplay(rowId, idx);
+            } else {
+                showAlert(`分子号数字部分必须在 1 到 ${MAX_MOL_NUM} 之间`, 'warning');
+                inp.value = row.molecularNumber; // 恢复原值
+            }
+        }
         else if (cls.includes('case-number-input')) row.caseNumber = inp.value;
         else if (cls.includes('diagnosis-input')) row.diagnosis = inp.value;
         else if (cls.includes('diagnosis-note-input')) row.diagnosisNote = inp.value;
@@ -295,20 +359,12 @@
     }
 
     function deleteRow(rowId) {
-        // 从数组中删除
         const idx = dataRows.findIndex(r => r.id == rowId);
-        if (idx !== -1) {
-            dataRows.splice(idx, 1);
-        }
-        // 从DOM中删除
-        const rowElement = document.getElementById(`row-${rowId}`);
-        if (rowElement) rowElement.remove();
-        
-        // 如果数据为空，添加一个默认行
+        if (idx !== -1) dataRows.splice(idx, 1);
+        document.getElementById(`row-${rowId}`)?.remove();
         if (dataRows.length === 0) {
             addNewRow();
         } else {
-            // 强制刷新所有行的显示（确保分子号重新整理非必须，但可以保持显示一致）
             dataRows.forEach((row, i) => refreshRowDisplay(row.id, i));
         }
         updateStatistics();
@@ -320,10 +376,24 @@
         if (dataRows.length === 0) return;
         let changes = 0;
         for (let row of dataRows) {
-            let match = row.molecularNumber.match(/\d{4}$/);
-            let numPart = match ? match[0] : '0001';
-            let newMol = newPrefix + numPart;
-            if (newMol !== row.molecularNumber) {
+            let num = getNumberFromMolecular(row.molecularNumber);
+            if (num !== null && num >= 1 && num <= MAX_MOL_NUM) {
+                let newMol = formatMolecularNumber(newPrefix, num);
+                if (newMol !== row.molecularNumber) {
+                    row.molecularNumber = newMol;
+                    row.molecularNumber2 = newMol;
+                    changes++;
+                }
+            } else {
+                // 如果原数字无效，则重新分配一个有效数字（取当前最大+1）
+                let maxNum = 0;
+                for (let r of dataRows) {
+                    let n = getNumberFromMolecular(r.molecularNumber);
+                    if (n !== null && n > maxNum) maxNum = n;
+                }
+                let newNum = maxNum + 1;
+                if (newNum > MAX_MOL_NUM) newNum = MAX_MOL_NUM;
+                let newMol = formatMolecularNumber(newPrefix, newNum);
                 row.molecularNumber = newMol;
                 row.molecularNumber2 = newMol;
                 changes++;
@@ -335,7 +405,7 @@
         updateStatistics();
     }
 
-    // 导入Excel：跳过标题行，按列顺序读取
+    // 导入Excel (列顺序: 姓名,性别,年龄,分子号(数字),病案号,诊断,诊断备注)
     function importExcel() {
         const fileInput = document.createElement('input');
         fileInput.type = 'file';
@@ -371,19 +441,22 @@
                     else gender = '其他';
 
                     let age = (isNaN(ageRaw) || ageRaw === '') ? '' : String(ageRaw);
-                    let molecularNumber = '';
-                    let numberPart = '';
+                    
+                    // 提取分子号数字部分
+                    let numberPart = null;
                     const digits = molecularNumberRaw.match(/\d+/g);
                     if (digits && digits.length) {
                         let lastDigits = digits[digits.length-1];
-                        numberPart = lastDigits.slice(-4);
-                        if (numberPart.length < 4) numberPart = numberPart.padStart(4, '0');
+                        // 只取最后最多5位数字
+                        if (lastDigits.length > 5) lastDigits = lastDigits.slice(-5);
+                        numberPart = parseInt(lastDigits, 10);
                     }
-                    if (numberPart) molecularNumber = currentPrefix + numberPart;
-                    else molecularNumber = '';
-
-                    if (!molecularNumber || !/^\D+\d{4}$/.test(molecularNumber)) {
-                        molecularNumber = currentPrefix + '0000';
+                    let molecularNumber = '';
+                    if (numberPart !== null && numberPart >= 1 && numberPart <= MAX_MOL_NUM) {
+                        molecularNumber = formatMolecularNumber(currentPrefix, numberPart);
+                    } else {
+                        // 无效则临时占位，稍后重新分配
+                        molecularNumber = formatMolecularNumber(currentPrefix, 1);
                     }
 
                     const rowId = Date.now() + Math.random() + importedCount;
@@ -399,6 +472,7 @@
 
                 if (importedCount === 0) { showAlert('未读取到有效数据，请检查列数是否至少7列', 'info'); return; }
 
+                // 添加到全局数组和DOM
                 for (let rd of newRows) {
                     const addHtml = `
                         <tr id="row-${rd.id}">
@@ -411,36 +485,39 @@
                             <td><div class="field-label">诊断</div><input type="text" class="input-field diagnosis-input" data-row-id="${rd.id}" value="${escapeHtml(rd.diagnosis)}" placeholder="诊断"></td>
                             <td><div class="field-label">诊断备注</div><input type="text" class="input-field diagnosis-note-input" data-row-id="${rd.id}" value="${escapeHtml(rd.diagnosisNote)}" placeholder="备注"></td>
                             <td><div class="field-label">Code</div><div class="code-field" data-row-id="${rd.id}">待计算</div><div class="code-explanation" data-row-id="${rd.id}"></div></td>
-                        </table>`;
+                        </tr>`;
                     tableBody.insertAdjacentHTML('beforeend', addHtml);
                     dataRows.push(rd);
                     setupRowEvents(rd.id);
                 }
 
-                // 整理分子号唯一性
+                // 整理分子号唯一性且 ≤ MAX_MOL_NUM
                 let usedNumbers = new Set();
                 for (let i=0; i<dataRows.length; i++) {
-                    let match = dataRows[i].molecularNumber.match(/\d{4}$/);
-                    if (match) usedNumbers.add(parseInt(match[0],10));
+                    let num = getNumberFromMolecular(dataRows[i].molecularNumber);
+                    if (num !== null && num >= 1 && num <= MAX_MOL_NUM) usedNumbers.add(num);
                 }
-                let nextNum = usedNumbers.size ? Math.max(...usedNumbers) + 1 : 1;
+                let nextNum = 1;
+                while (usedNumbers.has(nextNum)) nextNum++;
                 for (let i=0; i<dataRows.length; i++) {
-                    let currentNum = 0;
-                    let match = dataRows[i].molecularNumber.match(/\d{4}$/);
-                    if (match) currentNum = parseInt(match[0],10);
-                    if (!match || (usedNumbers.has(currentNum) && [...usedNumbers].filter(n=>n===currentNum).length>1)) {
-                        let newNum = nextNum++;
-                        let newMol = currentPrefix + String(newNum).padStart(4,'0');
+                    let num = getNumberFromMolecular(dataRows[i].molecularNumber);
+                    if (num === null || num < 1 || num > MAX_MOL_NUM || (usedNumbers.has(num) && [...usedNumbers].filter(n=>n===num).length>1)) {
+                        let newNum = nextNum;
+                        while (usedNumbers.has(newNum)) newNum++;
+                        if (newNum > MAX_MOL_NUM) newNum = MAX_MOL_NUM;
+                        let newMol = formatMolecularNumber(currentPrefix, newNum);
                         dataRows[i].molecularNumber = newMol;
                         dataRows[i].molecularNumber2 = newMol;
+                        usedNumbers.add(newNum);
+                        nextNum = newNum + 1;
                         const rowEl = document.getElementById(`row-${dataRows[i].id}`);
                         if (rowEl) {
                             const molInput = rowEl.querySelector('.molecular-number-input');
                             if (molInput) molInput.value = newMol;
                         }
                     } else {
-                        let numPart = String(currentNum).padStart(4,'0');
-                        let expected = currentPrefix + numPart;
+                        // 确保前缀一致
+                        let expected = formatMolecularNumber(currentPrefix, num);
                         if (dataRows[i].molecularNumber !== expected) {
                             dataRows[i].molecularNumber = expected;
                             dataRows[i].molecularNumber2 = expected;
@@ -455,7 +532,7 @@
 
                 dataRows.forEach((row, idx) => refreshRowDisplay(row.id, idx));
                 updateStatistics();
-                showAlert(`成功导入 ${importedCount} 条数据，分子号已根据当前前缀自动整理`, 'success');
+                showAlert(`成功导入 ${importedCount} 条数据，分子号已根据当前前缀整理且 ≤ ${MAX_MOL_NUM}`, 'success');
             };
             reader.readAsArrayBuffer(file);
         };
@@ -480,7 +557,7 @@
             'Code': row.code, 'Len': row.len, '姓名2': row.name2, '分子号2': row.molecularNumber2, '日期': row.date
         }));
         const ws = XLSX.utils.json_to_sheet(excelData);
-        ws['!cols'] = [{wch:10},{wch:6},{wch:6},{wch:10},{wch:12},{wch:20},{wch:15},{wch:15},{wch:6},{wch:10},{wch:10},{wch:10}];
+        ws['!cols'] = [{wch:10},{wch:6},{wch:6},{wch:12},{wch:12},{wch:20},{wch:15},{wch:15},{wch:6},{wch:10},{wch:12},{wch:10}];
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "临床数据");
         const today = new Date();
@@ -512,11 +589,19 @@
             successAlert.innerHTML = `<i class="fas fa-check-circle"></i> ${msg}`;
             successAlert.style.display = 'block';
             infoAlert.style.display = 'none';
+            warningAlert.style.display = 'none';
             setTimeout(() => { successAlert.style.display = 'none'; infoAlert.style.display = 'block'; }, 4000);
+        } else if (type === 'warning') {
+            warningAlert.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${msg}`;
+            warningAlert.style.display = 'block';
+            infoAlert.style.display = 'none';
+            successAlert.style.display = 'none';
+            setTimeout(() => { warningAlert.style.display = 'none'; infoAlert.style.display = 'block'; }, 4000);
         } else {
             infoAlert.innerHTML = `<i class="fas fa-info-circle"></i> ${msg}`;
             infoAlert.style.display = 'block';
             successAlert.style.display = 'none';
+            warningAlert.style.display = 'none';
         }
     }
 
